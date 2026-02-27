@@ -1,17 +1,18 @@
 namespace WebApi.Modules.Common.Swagger;
 
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Asp.Versioning.ApiExplorer;
 using FeatureFlags;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.FeatureManagement;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 /// <summary>
@@ -23,7 +24,7 @@ public static class SwaggerExtensions
     {
         get
         {
-            string basePath = PlatformServices.Default.Application.ApplicationBasePath;
+            string basePath = AppContext.BaseDirectory;
             string fileName = typeof(Startup).GetTypeInfo().Assembly.GetName().Name + ".xml";
             return Path.Combine(basePath, fileName);
         }
@@ -61,17 +62,11 @@ public static class SwaggerExtensions
                                 Name = "Authorization",
                                 Type = SecuritySchemeType.ApiKey
                             });
-                        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                        c.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
                         {
                                 {
-                                    new OpenApiSecurityScheme
-                                    {
-                                        Reference = new OpenApiReference
-                                        {
-                                            Type = ReferenceType.SecurityScheme, Id = "Bearer"
-                                        }
-                                    },
-                                    new string[] { }
+                                    new OpenApiSecuritySchemeReference("Bearer"),
+                                    new List<string>()
                                 }
                         });
                     });

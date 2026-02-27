@@ -18,17 +18,17 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
         HttpClient client = this._factory.CreateClient();
         HttpResponseMessage actualResponse = await client
             .GetAsync("/api/v1/Accounts/")
-            .ConfigureAwait(false);
+            ;
 
         string actualResponseString = await actualResponse.Content
             .ReadAsStringAsync()
-            .ConfigureAwait(false);
+            ;
 
         using StringReader stringReader = new StringReader(actualResponseString);
         using JsonTextReader reader = new JsonTextReader(stringReader) { DateParseHandling = DateParseHandling.None };
 
         JObject jsonResponse = await JObject.LoadAsync(reader)
-            .ConfigureAwait(false);
+            ;
 
         Guid.TryParse(jsonResponse["accounts"]![0]!["accountId"]!.Value<string>(), out Guid accountId);
         decimal.TryParse(jsonResponse["accounts"]![0]!["currentBalance"]!.Value<string>(),
@@ -41,15 +41,15 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
     {
         HttpClient client = this._factory.CreateClient();
         await client.GetAsync($"/api/v2/Accounts/{accountId}")
-            .ConfigureAwait(false);
+            ;
     }
 
     [Fact]
     public async Task GetAccounts_GetAccount()
     {
         Tuple<Guid, decimal> account = await this.GetAccounts()
-            .ConfigureAwait(false);
+            ;
         await this.GetAccount(account.Item1.ToString())
-            .ConfigureAwait(false);
+            ;
     }
 }

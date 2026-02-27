@@ -1,4 +1,4 @@
-using IdentityServer4.Extensions;
+using Duende.IdentityServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IdentityServer.Modules.Common;
 
-using IdentityServer4.Extensions;
+using Duende.IdentityServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
@@ -42,7 +42,8 @@ public static class ReverseProxyExtensions
         if (!string.IsNullOrEmpty(identityServerOrigin))
             app.Use(async (context, next) =>
             {
-                context.SetIdentityServerOrigin(identityServerOrigin);
+                var serverUrls = context.RequestServices.GetRequiredService<IServerUrls>();
+                serverUrls.Origin = identityServerOrigin;
                 context.Request.PathBase = basePath;
 
                 await next.Invoke()

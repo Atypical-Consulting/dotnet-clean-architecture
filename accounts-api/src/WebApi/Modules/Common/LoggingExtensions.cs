@@ -33,7 +33,7 @@ public static class LoggingExtensions
                     .ToList();
 
                 string jsonModelState = JsonSerializer.Serialize(errors);
-                logger.LogWarning("Invalid request.", jsonModelState);
+                logger.LogWarning("Invalid request: {ModelState}", jsonModelState);
 
                 ValidationProblemDetails problemDetails = new ValidationProblemDetails(actionContext.ModelState);
                 return new BadRequestObjectResult(problemDetails);
