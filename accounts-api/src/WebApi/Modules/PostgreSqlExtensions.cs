@@ -35,14 +35,30 @@ public static class PostgreSqlExtensions
 
         if (isEnabled)
         {
-            services.AddDbContext<MangaContext>(
-                options =>
-                {
-                    options.UseNpgsql(
-                        configuration.GetValue<string>("PersistenceModule:DefaultConnection"));
-                    options.ConfigureWarnings(warnings =>
-                        warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
-                });
+            // Check if running under Aspire (connection string provided via Aspire service discovery)
+            var aspireConnectionString = configuration.GetConnectionString("mangadb");
+            if (!string.IsNullOrEmpty(aspireConnectionString))
+            {
+                services.AddDbContext<MangaContext>(
+                    options =>
+                    {
+                        options.UseNpgsql(aspireConnectionString);
+                        options.ConfigureWarnings(warnings =>
+                            warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+                    });
+            }
+            else
+            {
+                services.AddDbContext<MangaContext>(
+                    options =>
+                    {
+                        options.UseNpgsql(
+                            configuration.GetValue<string>("PersistenceModule:DefaultConnection"));
+                        options.ConfigureWarnings(warnings =>
+                            warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+                    });
+            }
+
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddScoped<IAccountRepository, AccountRepository>();
