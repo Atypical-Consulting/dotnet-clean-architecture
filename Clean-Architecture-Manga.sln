@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29519.87
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "accounts-api", "accounts-api", "{51331007-CACA-4676-934B-217999A6B1E2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "identity-server", "identity-server", "{5829A64A-52DE-4656-A6C0-C06B1A6195E7}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F4408BAF-2D26-4D97-808C-7A96C4A7F636}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{54ECA5D5-FCB9-4427-98A1-6915E0C2C71B}"
@@ -31,8 +29,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".vscode", ".vscode", "{02D5
 		accounts-api\.vscode\settings.json = accounts-api\.vscode\settings.json
 		accounts-api\.vscode\tasks.json = accounts-api\.vscode\tasks.json
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IdentityServer", "identity-server\IdentityServer.csproj", "{01537DBF-3C0F-4B83-A089-0D12E5CA06C6}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose\docker-compose.dcproj", "{A0517AF3-3B35-443A-80DC-FF94F10CF056}"
 EndProject
@@ -106,10 +102,6 @@ Global
 		{BF05183E-699A-43A8-A5F3-1DB71B0F38B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF05183E-699A-43A8-A5F3-1DB71B0F38B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF05183E-699A-43A8-A5F3-1DB71B0F38B0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{01537DBF-3C0F-4B83-A089-0D12E5CA06C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{01537DBF-3C0F-4B83-A089-0D12E5CA06C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{01537DBF-3C0F-4B83-A089-0D12E5CA06C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{01537DBF-3C0F-4B83-A089-0D12E5CA06C6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A0517AF3-3B35-443A-80DC-FF94F10CF056}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A0517AF3-3B35-443A-80DC-FF94F10CF056}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0517AF3-3B35-443A-80DC-FF94F10CF056}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -133,7 +125,6 @@ Global
 		{48BBEC7F-651B-4EF2-94E4-E8FFAC3D8E7B} = {54ECA5D5-FCB9-4427-98A1-6915E0C2C71B}
 		{BF05183E-699A-43A8-A5F3-1DB71B0F38B0} = {54ECA5D5-FCB9-4427-98A1-6915E0C2C71B}
 		{02D548DA-5DE0-486E-A5D5-9BEDFFC0CA2A} = {51331007-CACA-4676-934B-217999A6B1E2}
-		{01537DBF-3C0F-4B83-A089-0D12E5CA06C6} = {5829A64A-52DE-4656-A6C0-C06B1A6195E7}
 		{0925FCA6-083A-4478-80F3-2391987AAF2C} = {F4408BAF-2D26-4D97-808C-7A96C4A7F636}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

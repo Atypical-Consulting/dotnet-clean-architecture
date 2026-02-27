@@ -10,7 +10,6 @@ services:
       - ../.docker/https/localhost.key:/etc/ssl/private/localhost.key:ro
     links:
       - accounts-api
-      - identity-server
       - wallet-spa
   accounts-api:
     image: ${DOCKER_REGISTRY-}accounts
@@ -30,7 +29,6 @@ services:
     depends_on:
       - sql1
       - accounts-api-seed
-      - identity-server
   accounts-api-seed:
     container_name: "accounts-api-seed"
     build:
@@ -41,20 +39,6 @@ services:
     command: bash -c "/root/.dotnet/tools/dotnet-ef database update --project src/Infrastructure --startup-project src/WebApi"
     depends_on:
       - sql1
-  identity-server:
-    image: ${DOCKER_REGISTRY-}identityserver
-    container_name: "identity-server"
-    environment:
-      - ASPNETCORE_URLS=https://+;http://+
-      - ASPNETCORE_HTTPS_PORT=443
-      - ASPNETCORE_BASEPATH=/identity-server
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=MyCertificatePassword
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
-    volumes:
-      - ../.docker/https:/https:ro
-    build:
-      context: ../
-      dockerfile: identity-server/Dockerfile
   wallet-spa:
     image: ${DOCKER_REGISTRY-}wallet
     container_name: "wallet-spa"

@@ -4,11 +4,11 @@ using Application.Services;
 using FeatureFlags;
 using Infrastructure.ExternalAuthentication;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FeatureManagement;
+using OpenIddict.Validation.AspNetCore;
 
 /// <summary>
 ///     Authentication Extensions.
@@ -36,17 +36,18 @@ public static class AuthenticationExtensions
         {
             services.AddScoped<IUserService, ExternalUserService>();
 
-            services
-                .AddAuthentication("Bearer")
-                .AddJwtBearer("Bearer", options =>
+            services.AddOpenIddict()
+                .AddValidation(options =>
                 {
-                        // set the Identity.API service as the authority on authentication/authorization
-                        options.Authority = configuration["AuthenticationModule:AuthorityUrl"];
+                    options.SetIssuer(
+                        configuration["AuthenticationModule:AuthorityUrl"]!);
 
-                    options.RequireHttpsMetadata = false;
-
-                    options.Audience = "api1";
+                    options.UseSystemNetHttp();
+                    options.UseAspNetCore();
                 });
+
+            services
+                .AddAuthentication(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme);
         }
         else
         {
