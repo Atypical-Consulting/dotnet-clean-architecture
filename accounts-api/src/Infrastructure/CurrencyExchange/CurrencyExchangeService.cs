@@ -2,29 +2,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Application.Services;
 using Domain.ValueObjects;
+using Microsoft.Extensions.Options;
 
 /// <summary>
 ///     Real implementation of the Exchange Service using external data source
 /// </summary>
 public sealed class CurrencyExchangeService : ICurrencyExchange
 {
-    public const string HttpClientName = "Fixer";
-
-    [SuppressMessage("Minor Code Smell", "S1075:URIs should not be hardcoded", Justification = "<Pending>")]
-    private const string _exchangeUrl = "https://api.exchangeratesapi.io/latest?base=USD";
+    public const string HttpClientName = "CurrencyExchange";
 
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly CurrencyExchangeOptions _options;
 
     private readonly Dictionary<Currency, decimal> _usdRates = new Dictionary<Currency, decimal>();
 
-    public CurrencyExchangeService(IHttpClientFactory httpClientFactory) =>
+    public CurrencyExchangeService(
+        IHttpClientFactory httpClientFactory,
+        IOptions<CurrencyExchangeOptions> options)
+    {
         this._httpClientFactory = httpClientFactory;
+        this._options = options.Value;
+    }
 
     /// <summary>
     ///     Converts allowed currencies into USD.
@@ -33,7 +36,15 @@ public sealed class CurrencyExchangeService : ICurrencyExchange
     public async Task<Money> Convert(Money originalAmount, Currency destinationCurrency)
     {
         HttpClient httpClient = this._httpClientFactory.CreateClient(HttpClientName);
-        Uri requestUri = new Uri(_exchangeUrl);
+
+        string url = this._options.ApiUrl;
+        if (!string.IsNullOrEmpty(this._options.ApiKey))
+        {
+            string separator = url.Contains("?") ? "&" : "?";
+            url = $"{url}{separator}apikey={this._options.ApiKey}";
+        }
+
+        Uri requestUri = new Uri(url);
 
         HttpResponseMessage response = await httpClient.GetAsync(requestUri)
             .ConfigureAwait(false);
