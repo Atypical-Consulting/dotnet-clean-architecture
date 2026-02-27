@@ -1,0 +1,110 @@
+@page "/accounts/open"
+@rendermode InteractiveServer
+@inject AccountApiClient Api
+@inject NavigationManager Navigation
+
+<PageTitle>Open Account - Wallet App</PageTitle>
+
+<div class="mx-auto max-w-xl">
+    <div class="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+        <div class="px-4 py-5 sm:p-6">
+            <h2 class="text-lg font-medium text-gray-900 dark:text-white">Open a New Account</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Create a new bank account with an initial deposit.
+            </p>
+
+            <ErrorAlert Message="@_error" />
+            <SuccessAlert Message="@_successMessage" />
+
+            <EditForm Model="_form" OnValidSubmit="HandleSubmit" FormName="open-account-form" class="mt-6 space-y-6">
+                <div>
+                    <label for="initial-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Initial Deposit Amount
+                    </label>
+                    <div class="relative mt-1 rounded-md shadow-sm">
+                        <InputNumber id="initial-amount"
+                                     @bind-Value="_form.Amount"
+                                     class="block w-full rounded-md border-gray-300 pr-12 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                     placeholder="0.00"
+                                     aria-required="true"
+                                     aria-describedby="amount-description" />
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400" id="amount-description">
+                        The minimum initial deposit is determined by the bank policy.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Currency
+                    </label>
+                    <InputSelect id="currency"
+                                 @bind-Value="_form.Currency"
+                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                 aria-required="true">
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="BRL">BRL - Brazilian Real</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="SEK">SEK - Swedish Krona</option>
+                    </InputSelect>
+                </div>
+
+                <div class="flex items-center justify-end gap-3">
+                    <a href="/"
+                       class="inline-flex justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-600"
+                       aria-label="Cancel and return to dashboard">
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            disabled="@_submitting"
+                            class="inline-flex justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50">
+                        @(_submitting ? "Creating..." : "Open Account")
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private OpenAccountForm _form = new();
+    private bool _submitting;
+    private string? _error;
+    private string? _successMessage;
+
+    private async Task HandleSubmit()
+    {
+        _submitting = true;
+        _error = null;
+        _successMessage = null;
+
+        try
+        {
+            var account = await Api.OpenAccountAsync(_form.Amount, _form.Currency);
+            if (account is not null)
+            {
+                Navigation.NavigateTo($"/accounts/{account.AccountId}");
+            }
+            else
+            {
+                _error = "Failed to create account. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to create account: {ex.Message}";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private sealed class OpenAccountForm
+    {
+        public decimal Amount { get; set; } = 100;
+        public string Currency { get; set; } = "USD";
+    }
+}

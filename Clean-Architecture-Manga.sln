@@ -57,16 +57,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wallett-spa", "wallett-spa", "{E578FEEE-CF6A-4017-97F1-E5A9B0D2F398}"
-	ProjectSection(SolutionItems) = preProject
-		wallet-spa\.dockerignore = wallet-spa\.dockerignore
-		wallet-spa\.env.development = wallet-spa\.env.development
-		wallet-spa\.env.docker = wallet-spa\.env.docker
-		wallet-spa\.env.localhost = wallet-spa\.env.localhost
-		wallet-spa\.gitignore = wallet-spa\.gitignore
-		wallet-spa\Dockerfile = wallet-spa\Dockerfile
-		wallet-spa\vs.debug.env = wallet-spa\vs.debug.env
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WalletApp", "accounts-api\src\WalletApp\WalletApp.csproj", "{D1A2B3C4-E5F6-7890-ABCD-EF1234567890}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,6 +101,10 @@ Global
 		{0925FCA6-083A-4478-80F3-2391987AAF2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0925FCA6-083A-4478-80F3-2391987AAF2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0925FCA6-083A-4478-80F3-2391987AAF2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1A2B3C4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1A2B3C4-E5F6-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1A2B3C4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1A2B3C4-E5F6-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -126,6 +121,7 @@ Global
 		{BF05183E-699A-43A8-A5F3-1DB71B0F38B0} = {54ECA5D5-FCB9-4427-98A1-6915E0C2C71B}
 		{02D548DA-5DE0-486E-A5D5-9BEDFFC0CA2A} = {51331007-CACA-4676-934B-217999A6B1E2}
 		{0925FCA6-083A-4478-80F3-2391987AAF2C} = {F4408BAF-2D26-4D97-808C-7A96C4A7F636}
+		{D1A2B3C4-E5F6-7890-ABCD-EF1234567890} = {F4408BAF-2D26-4D97-808C-7A96C4A7F636}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0941E413-A73D-485D-8EDE-03CE0C6967E1}
