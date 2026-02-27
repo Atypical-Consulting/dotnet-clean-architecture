@@ -1,6 +1,5 @@
 namespace WebApi;
 
-using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -48,8 +47,7 @@ public sealed class Startup
     /// </summary>
     public void Configure(
         IApplicationBuilder app,
-        IWebHostEnvironment env,
-        IApiVersionDescriptionProvider provider)
+        IWebHostEnvironment env)
     {
         if (env.IsDevelopment())
         {
@@ -67,11 +65,11 @@ public sealed class Startup
             .UseCustomCors()
             .UseCustomHttpMetrics()
             .UseRouting()
-            .UseVersionedSwagger(provider, this.Configuration, env)
             .UseAuthentication()
             .UseAuthorization()
             .UseEndpoints(endpoints =>
             {
+                endpoints.MapOpenApiEndpoints();
                 endpoints.MapControllers();
                 endpoints.MapMetrics();
             });

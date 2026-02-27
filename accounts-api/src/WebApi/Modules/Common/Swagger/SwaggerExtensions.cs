@@ -1,38 +1,23 @@
 namespace WebApi.Modules.Common.Swagger;
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using Asp.Versioning.ApiExplorer;
+using System.Threading.Tasks;
 using FeatureFlags;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
 using Microsoft.OpenApi;
-using Swashbuckle.AspNetCore.SwaggerGen;
+using Scalar.AspNetCore;
 
 /// <summary>
-///     Swagger Extensions.
+///     OpenAPI Extensions.
 /// </summary>
 public static class SwaggerExtensions
 {
-    private static string XmlCommentsFilePath
-    {
-        get
-        {
-            string basePath = AppContext.BaseDirectory;
-            string fileName = typeof(Startup).GetTypeInfo().Assembly.GetName().Name + ".xml";
-            return Path.Combine(basePath, fileName);
-        }
-    }
-
-
     /// <summary>
-    ///     Add Swagger Configuration dependencies.
+    ///     Add OpenAPI Configuration dependencies.
     /// </summary>
     public static IServiceCollection AddSwagger(this IServiceCollection services)
     {
@@ -48,65 +33,42 @@ public static class SwaggerExtensions
 
         if (isEnabled)
         {
-            services
-                .AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>()
-                .AddSwaggerGen(
-                    c =>
+            services.AddOpenApi(options =>
+            {
+                options.AddDocumentTransformer((document, context, cancellationToken) =>
+                {
+                    document.Info.Title = "Clean Architecture Manga API";
+                    document.Info.Description = "Clean Architecture, DDD and TDD implementation.";
+                    document.Info.Contact = new OpenApiContact
                     {
-                        c.IncludeXmlComments(XmlCommentsFilePath);
-                        c.AddSecurityDefinition("Bearer",
-                            new OpenApiSecurityScheme
-                            {
-                                In = ParameterLocation.Header,
-                                Description = "Please insert JWT with Bearer into field",
-                                Name = "Authorization",
-                                Type = SecuritySchemeType.ApiKey
-                            });
-                        c.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
-                        {
-                                {
-                                    new OpenApiSecuritySchemeReference("Bearer"),
-                                    new List<string>()
-                                }
-                        });
-                    });
+                        Name = "Ivan Paulovich",
+                        Email = "ivan@paulovich.net"
+                    };
+                    document.Info.License = new OpenApiLicense
+                    {
+                        Name = "Apache License",
+                        Url = new Uri(
+                            "https://raw.githubusercontent.com/ivanpaulovich/clean-architecture-manga/master/README.md")
+                    };
+                    document.Info.TermsOfService = new Uri("http://paulovich.net");
+                    return Task.CompletedTask;
+                });
+            });
         }
 
         return services;
     }
 
     /// <summary>
-    ///     Add Swagger dependencies.
+    ///     Map OpenAPI and Scalar API reference endpoints.
     /// </summary>
-    public static IApplicationBuilder UseVersionedSwagger(
-        this IApplicationBuilder app,
-        IApiVersionDescriptionProvider provider,
-        IConfiguration configuration,
-        IWebHostEnvironment env)
+    public static IEndpointRouteBuilder MapOpenApiEndpoints(this IEndpointRouteBuilder endpoints)
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(
-            options =>
-            {
-                foreach (ApiVersionDescription description in provider.ApiVersionDescriptions)
-                {
-                    string swaggerEndpoint;
-
-                    string basePath = configuration["ASPNETCORE_BASEPATH"];
-
-                    if (!string.IsNullOrEmpty(basePath))
-                    {
-                        swaggerEndpoint = $"{basePath}/swagger/{description.GroupName}/swagger.json";
-                    }
-                    else
-                    {
-                        swaggerEndpoint = $"/swagger/{description.GroupName}/swagger.json";
-                    }
-
-                    options.SwaggerEndpoint(swaggerEndpoint, description.GroupName.ToUpperInvariant());
-                }
-            });
-
-        return app;
+        endpoints.MapOpenApi();
+        endpoints.MapScalarApiReference(options =>
+        {
+            options.Title = "Clean Architecture Manga API";
+        });
+        return endpoints;
     }
 }
