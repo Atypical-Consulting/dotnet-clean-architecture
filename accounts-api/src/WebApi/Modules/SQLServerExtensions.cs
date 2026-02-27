@@ -6,6 +6,7 @@ using Domain;
 using Infrastructure.DataAccess;
 using Infrastructure.DataAccess.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.FeatureManagement;
@@ -37,8 +38,13 @@ public static class SQLServerExtensions
         if (isEnabled)
         {
             services.AddDbContext<MangaContext>(
-                options => options.UseSqlServer(
-                    configuration.GetValue<string>("PersistenceModule:DefaultConnection")));
+                options =>
+                {
+                    options.UseSqlServer(
+                        configuration.GetValue<string>("PersistenceModule:DefaultConnection"));
+                    options.ConfigureWarnings(warnings =>
+                        warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+                });
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddScoped<IAccountRepository, AccountRepository>();
