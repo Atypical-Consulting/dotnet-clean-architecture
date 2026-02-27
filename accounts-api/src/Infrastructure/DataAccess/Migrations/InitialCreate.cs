@@ -1,4 +1,4 @@
-﻿namespace Infrastructure.DataAccess.Migrations;
+namespace Infrastructure.DataAccess.Migrations;
 
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -11,9 +11,9 @@ public partial class InitialCreate : Migration
             "Account",
             table => new
             {
-                AccountId = table.Column<Guid>(nullable: false),
-                ExternalUserId = table.Column<string>(nullable: false),
-                Currency = table.Column<string>(nullable: false)
+                AccountId = table.Column<Guid>(type: "uuid", nullable: false),
+                ExternalUserId = table.Column<string>(type: "text", nullable: false),
+                Currency = table.Column<string>(type: "text", nullable: false)
             },
             constraints: table => { table.PrimaryKey("PK_Account", x => x.AccountId); });
 
@@ -21,11 +21,11 @@ public partial class InitialCreate : Migration
             "Credit",
             table => new
             {
-                CreditId = table.Column<Guid>(nullable: false),
-                TransactionDate = table.Column<DateTime>(nullable: false),
-                AccountId = table.Column<Guid>(nullable: false),
-                Value = table.Column<decimal>(nullable: false),
-                Currency = table.Column<string>(nullable: false)
+                CreditId = table.Column<Guid>(type: "uuid", nullable: false),
+                TransactionDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                AccountId = table.Column<Guid>(type: "uuid", nullable: false),
+                Value = table.Column<decimal>(type: "numeric", nullable: false),
+                Currency = table.Column<string>(type: "text", nullable: false)
             },
             constraints: table =>
             {
@@ -42,11 +42,11 @@ public partial class InitialCreate : Migration
             "Debit",
             table => new
             {
-                DebitId = table.Column<Guid>(nullable: false),
-                TransactionDate = table.Column<DateTime>(nullable: false),
-                AccountId = table.Column<Guid>(nullable: false),
-                Value = table.Column<decimal>(nullable: false),
-                Currency = table.Column<string>(nullable: false)
+                DebitId = table.Column<Guid>(type: "uuid", nullable: false),
+                TransactionDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                AccountId = table.Column<Guid>(type: "uuid", nullable: false),
+                Value = table.Column<decimal>(type: "numeric", nullable: false),
+                Currency = table.Column<string>(type: "text", nullable: false)
             },
             constraints: table =>
             {

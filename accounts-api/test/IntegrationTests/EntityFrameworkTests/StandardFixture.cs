@@ -1,4 +1,4 @@
-﻿namespace IntegrationTests.EntityFrameworkTests;
+namespace IntegrationTests.EntityFrameworkTests;
 
 using System;
 using Infrastructure.DataAccess;
@@ -10,10 +10,10 @@ public sealed class StandardFixture : IDisposable
     public StandardFixture()
     {
         const string connectionString =
-            "Server=localhost;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts;";
+            "Host=localhost;Port=5432;Database=Accounts;Username=postgres;Password=YourStrong!Passw0rd";
 
         DbContextOptions<MangaContext> options = new DbContextOptionsBuilder<MangaContext>()
-            .UseSqlServer(connectionString)
+            .UseNpgsql(connectionString)
             .ConfigureWarnings(warnings =>
                 warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
             .Options;

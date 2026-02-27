@@ -34,7 +34,7 @@ public static class HealthChecksExtensions
             .GetRequiredService<IFeatureManager>();
 
         bool isEnabled = featureManager
-            .IsEnabledAsync(nameof(CustomFeature.SQLServer))
+            .IsEnabledAsync(nameof(CustomFeature.PostgreSql))
             .ConfigureAwait(false)
             .GetAwaiter()
             .GetResult();

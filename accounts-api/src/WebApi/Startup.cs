@@ -31,7 +31,7 @@ public sealed class Startup
             .AddFeatureFlags(this.Configuration) // should be the first one.
             .AddInvalidRequestLogging()
             .AddCurrencyExchange(this.Configuration)
-            .AddSQLServer(this.Configuration)
+            .AddPostgreSql(this.Configuration)
             .AddHealthChecks(this.Configuration)
             .AddAuthentication(this.Configuration)
             .AddVersioning()

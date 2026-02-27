@@ -14,14 +14,12 @@ using Microsoft.FeatureManagement;
 /// <summary>
 ///     Persistence Extensions.
 /// </summary>
-#pragma warning disable S101 // Types should be named in PascalCase
-public static class SQLServerExtensions
-#pragma warning restore S101 // Types should be named in PascalCase
+public static class PostgreSqlExtensions
 {
     /// <summary>
     ///     Add Persistence dependencies varying on configuration.
     /// </summary>
-    public static IServiceCollection AddSQLServer(
+    public static IServiceCollection AddPostgreSql(
         this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -30,7 +28,7 @@ public static class SQLServerExtensions
             .GetRequiredService<IFeatureManager>();
 
         bool isEnabled = featureManager
-            .IsEnabledAsync(nameof(CustomFeature.SQLServer))
+            .IsEnabledAsync(nameof(CustomFeature.PostgreSql))
             .ConfigureAwait(false)
             .GetAwaiter()
             .GetResult();
@@ -40,7 +38,7 @@ public static class SQLServerExtensions
             services.AddDbContext<MangaContext>(
                 options =>
                 {
-                    options.UseSqlServer(
+                    options.UseNpgsql(
                         configuration.GetValue<string>("PersistenceModule:DefaultConnection"));
                     options.ConfigureWarnings(warnings =>
                         warnings.Ignore(RelationalEventId.PendingModelChangesWarning));

@@ -5,8 +5,21 @@ on: [push]
 jobs:
   build_docker_image:
     env:
-      PersistenceModule__DefaultConnection: Server=localhost;User Id=sa;Password=${{ secrets.SA_PASSWORD }};Database=Accounts;
+      PersistenceModule__DefaultConnection: Host=localhost;Port=5432;Database=Accounts;Username=postgres;Password=postgres
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: Accounts
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
@@ -19,12 +32,9 @@ jobs:
         key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-nuget-
-    - name: Setup Database then Run Tests
+    - name: Build and Run Tests
       run: |
         dotnet --version
-        docker pull mcr.microsoft.com/mssql/server:2022-latest
-        docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=${{ secrets.SA_PASSWORD }}' -p 1433:1433 --name sql1 -d mcr.microsoft.com/mssql/server:2022-latest
-        sleep 10
         dotnet build
         pushd accounts-api
         dotnet tool update --global dotnet-ef

@@ -27,7 +27,7 @@ public sealed class ContextFactory : IDesignTimeDbContextFactory<MangaContext>
 
         DbContextOptionsBuilder<MangaContext> builder = new DbContextOptionsBuilder<MangaContext>();
         Console.WriteLine(connectionString);
-        builder.UseSqlServer(connectionString);
+        builder.UseNpgsql(connectionString);
         builder.EnableSensitiveDataLogging();
         builder.ConfigureWarnings(warnings =>
             warnings.Ignore(RelationalEventId.PendingModelChangesWarning));

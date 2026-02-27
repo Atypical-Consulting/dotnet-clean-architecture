@@ -16,9 +16,9 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Startup>
             config.AddInMemoryCollection(
                 new Dictionary<string, string>
                 {
-                    ["FeatureManagement:SQLServer"] = "true",
+                    ["FeatureManagement:PostgreSql"] = "true",
                     ["PersistenceModule:DefaultConnection"] =
-                        "Server=localhost;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts;",
+                        "Host=localhost;Port=5432;Database=Accounts;Username=postgres;Password=YourStrong!Passw0rd",
                     ["FeatureManagement:CurrencyExchangeModule"] = "true"
                 });
         });

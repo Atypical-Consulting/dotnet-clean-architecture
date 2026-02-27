@@ -16,7 +16,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Startup>
             config.AddInMemoryCollection(
                 new Dictionary<string, string>
                 {
-                    ["FeatureManagement:SQLServer"] = "false",
+                    ["FeatureManagement:PostgreSql"] = "false",
                     ["FeatureManagement:CurrencyExchangeModule"] = "false"
                 });
         });
