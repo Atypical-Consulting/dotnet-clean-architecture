@@ -347,8 +347,8 @@ public class AccountController : Controller
             var idp = User.FindFirst(JwtClaimTypes.IdentityProvider)?.Value;
             if (idp != null && idp != IdentityServerConstants.LocalIdentityProvider)
             {
-                var handler = await HttpContext.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authentication.IAuthenticationHandlerProvider>().GetHandlerAsync(HttpContext, idp);
-                var providerSupportsSignout = handler is Microsoft.AspNetCore.Authentication.IAuthenticationSignOutHandler;
+                var handler = await HttpContext.RequestServices.GetRequiredService<IAuthenticationHandlerProvider>().GetHandlerAsync(HttpContext, idp);
+                var providerSupportsSignout = handler is IAuthenticationSignOutHandler;
                 if (providerSupportsSignout)
                 {
                     if (vm.LogoutId == null)

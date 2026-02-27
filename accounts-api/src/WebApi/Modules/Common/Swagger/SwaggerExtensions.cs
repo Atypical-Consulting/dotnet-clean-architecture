@@ -1,6 +1,7 @@
 namespace WebApi.Modules.Common.Swagger;
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Asp.Versioning.ApiExplorer;
@@ -65,7 +66,7 @@ public static class SwaggerExtensions
                         {
                                 {
                                     new OpenApiSecuritySchemeReference("Bearer"),
-                                    new System.Collections.Generic.List<string>()
+                                    new List<string>()
                                 }
                         });
                     });
