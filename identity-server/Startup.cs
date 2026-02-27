@@ -61,8 +61,8 @@ public class Startup
                 // register your IdentityServer with Google at https://console.developers.google.com
                 // enable the Google+ API
                 // set the redirect URI to http://localhost:5000/signin-google
-                options.ClientId = "556852823610-st4qd2e8v7eu3unu6copt35dse8l34c7.apps.googleusercontent.com";
-                options.ClientSecret = "WIAHI8YIT-Rg7ywSQnmYZZir";
+                options.ClientId = Configuration["Google:ClientId"];
+                options.ClientSecret = Configuration["Google:ClientSecret"];
             });
 
         services

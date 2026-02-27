@@ -41,9 +41,47 @@ Then the following containers should be running on `docker ps`:
 | Wallet SPA 	      | https://wallet.local:8081                                                     |
 | Accounts API 	      | https://wallet.local:8081/accounts-api                                        |
 | Identity Server 	  | https://wallet.local:8081/identity-server	                                  |
-| SQL Server 	      | Server=localhost;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts; |
+| SQL Server 	      | Server=localhost;User Id=sa;Password=***;Database=Accounts; |
 
 Browse to [https://wallet.local:8081](https://wallet.local:8081) then click on Log In. If asked trust the [self-signed certificate](https://stackoverflow.com/questions/21397809/create-a-trusted-self-signed-ssl-cert-for-localhost-for-use-with-express-node).
+
+## Configuring Secrets Locally
+
+This project uses environment variables and .NET User Secrets for sensitive configuration. **Never commit real credentials to the repository.**
+
+### 1. Environment variables (Docker Compose)
+
+Copy the example environment file and fill in your values:
+
+```sh
+cp .env.example .env
+# Edit .env with your actual secrets
+```
+
+The `.env` file is gitignored and will be picked up automatically by `docker-compose`.
+
+### 2. .NET User Secrets (local development without Docker)
+
+For the Accounts API:
+
+```sh
+cd accounts-api/src/WebApi
+dotnet user-secrets init
+dotnet user-secrets set "PersistenceModule:DefaultConnection" "Server=localhost;User Id=sa;Password=YOUR_PASSWORD;Database=Accounts;"
+```
+
+For the Identity Server (Google OAuth):
+
+```sh
+cd identity-server
+dotnet user-secrets init
+dotnet user-secrets set "Google:ClientId" "your-google-client-id"
+dotnet user-secrets set "Google:ClientSecret" "your-google-client-secret"
+```
+
+### 3. GitHub Actions
+
+For CI/CD, store secrets in **GitHub repository secrets** and reference them in workflow files as `${{ secrets.SECRET_NAME }}`.
 
 ## Motivation
 
