@@ -23,3 +23,9 @@ updates:
   schedule:
     interval: weekly
   open-pull-requests-limit: 10
+
+- package-ecosystem: "helm"
+  directory: "/k8s/charts/clean-architecture"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 5
