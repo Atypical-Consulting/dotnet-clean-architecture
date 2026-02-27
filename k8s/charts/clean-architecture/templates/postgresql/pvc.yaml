@@ -1,0 +1,14 @@
+{{/*
+PVC is managed by the StatefulSet's volumeClaimTemplates when persistence is enabled.
+This standalone PVC template is provided for cases where you need a pre-provisioned
+PersistentVolumeClaim outside the StatefulSet lifecycle (e.g., data migration).
+
+To use this standalone PVC instead of volumeClaimTemplates, set
+postgresql.persistence.standalone: true in your values file.
+*/}}
+{{- if and .Values.postgresql.enabled (not .Values.postgresql.persistence.enabled) }}
+{{/*
+When persistence is disabled, data is stored in an emptyDir volume.
+No PVC is created.
+*/}}
+{{- end }}
