@@ -2,6 +2,7 @@ namespace UnitTests.OpenAccount;
 
 using System.Threading.Tasks;
 using Application.UseCases.OpenAccount;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 public sealed class OpenAccountTests : IClassFixture<StandardFixture>
@@ -19,7 +20,8 @@ public sealed class OpenAccountTests : IClassFixture<StandardFixture>
             this._fixture.AccountRepositoryFake,
             this._fixture.UnitOfWork,
             this._fixture.TestUserService,
-            this._fixture.EntityFactory);
+            this._fixture.EntityFactory,
+            NullLogger<OpenAccountUseCase>.Instance);
 
         sut.SetOutputPort(presenter);
 

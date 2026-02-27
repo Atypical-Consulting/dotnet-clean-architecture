@@ -10,6 +10,7 @@ using Domain;
 using Domain.Credits;
 using Domain.Debits;
 using Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 using Services;
 
 /// <inheritdoc />
@@ -18,6 +19,7 @@ public sealed class TransferUseCase : ITransferUseCase
     private readonly IAccountFactory _accountFactory;
     private readonly IAccountRepository _accountRepository;
     private readonly ICurrencyExchange _currencyExchange;
+    private readonly ILogger<TransferUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
     private IOutputPort? _outputPort;
 
@@ -28,16 +30,19 @@ public sealed class TransferUseCase : ITransferUseCase
     /// <param name="unitOfWork">Unit Of Work.</param>
     /// <param name="accountFactory"></param>
     /// <param name="currencyExchange"></param>
+    /// <param name="logger"></param>
     public TransferUseCase(
         IAccountRepository accountRepository,
         IUnitOfWork unitOfWork,
         IAccountFactory accountFactory,
-        ICurrencyExchange currencyExchange)
+        ICurrencyExchange currencyExchange,
+        ILogger<TransferUseCase> logger)
     {
         this._accountRepository = accountRepository;
         this._unitOfWork = unitOfWork;
         this._accountFactory = accountFactory;
         this._currencyExchange = currencyExchange;
+        this._logger = logger;
         this._outputPort = new TransferPresenter();
     }
 
@@ -54,6 +59,10 @@ public sealed class TransferUseCase : ITransferUseCase
     private async Task Transfer(AccountId originAccountId, AccountId destinationAccountId,
         Money transferAmount)
     {
+        this._logger.LogInformation(
+            "Processing transfer of {Amount} {Currency} from account {OriginAccountId} to account {DestinationAccountId}",
+            transferAmount.Amount, transferAmount.Currency, originAccountId, destinationAccountId);
+
         IAccount originAccount = await this._accountRepository
             .GetAccount(originAccountId)
             .ConfigureAwait(false);
@@ -74,6 +83,9 @@ public sealed class TransferUseCase : ITransferUseCase
 
             if (withdrawAccount.GetCurrentBalance().Subtract(debit.Amount).Amount < 0)
             {
+                this._logger.LogWarning(
+                    "Transfer denied: insufficient funds in origin account {OriginAccountId}",
+                    originAccountId);
                 this._outputPort?.OutOfFunds();
                 return;
             }
@@ -92,10 +104,17 @@ public sealed class TransferUseCase : ITransferUseCase
             await this.Deposit(depositAccount, credit)
                 .ConfigureAwait(false);
 
+            this._logger.LogInformation(
+                "Transfer of {Amount} {Currency} completed from account {OriginAccountId} to account {DestinationAccountId}",
+                transferAmount.Amount, transferAmount.Currency, originAccountId, destinationAccountId);
+
             this._outputPort?.Ok(withdrawAccount, debit, depositAccount, credit);
             return;
         }
 
+        this._logger.LogWarning(
+            "Transfer failed: origin account {OriginAccountId} or destination account {DestinationAccountId} not found",
+            originAccountId, destinationAccountId);
         this._outputPort?.NotFound();
     }
 

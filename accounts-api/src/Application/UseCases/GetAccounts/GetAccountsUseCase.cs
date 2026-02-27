@@ -7,12 +7,14 @@ namespace Application.UseCases.GetAccounts;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Domain;
+using Microsoft.Extensions.Logging;
 using Services;
 
 /// <inheritdoc />
 public sealed class GetAccountsUseCase : IGetAccountsUseCase
 {
     private readonly IAccountRepository _accountRepository;
+    private readonly ILogger<GetAccountsUseCase> _logger;
     private readonly IUserService _userService;
     private IOutputPort _outputPort;
 
@@ -21,12 +23,15 @@ public sealed class GetAccountsUseCase : IGetAccountsUseCase
     /// </summary>
     /// <param name="userService">User Service.</param>
     /// <param name="accountRepository">Customer Repository.</param>
+    /// <param name="logger"></param>
     public GetAccountsUseCase(
         IUserService userService,
-        IAccountRepository accountRepository)
+        IAccountRepository accountRepository,
+        ILogger<GetAccountsUseCase> logger)
     {
         this._userService = userService;
         this._accountRepository = accountRepository;
+        this._logger = logger;
         this._outputPort = new GetAccountPresenter();
     }
 
@@ -44,9 +49,15 @@ public sealed class GetAccountsUseCase : IGetAccountsUseCase
 
     private async Task GetAccounts(string externalUserId)
     {
-        IList<Account>? accounts = await this._accountRepository
+        this._logger.LogDebug("Retrieving accounts for user {UserId}", externalUserId);
+
+        IList<Account> accounts = await this._accountRepository
             .GetAccounts(externalUserId)
-            .ConfigureAwait(false);
+            .ConfigureAwait(false) ?? [];
+
+        this._logger.LogDebug(
+            "Retrieved {AccountCount} accounts for user {UserId}",
+            accounts.Count, externalUserId);
 
         this._outputPort.Ok(accounts);
     }

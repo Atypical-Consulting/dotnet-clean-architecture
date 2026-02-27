@@ -8,12 +8,14 @@ using System;
 using System.Threading.Tasks;
 using Domain;
 using Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 using Services;
 
 /// <inheritdoc />
 public sealed class CloseAccountUseCase : ICloseAccountUseCase
 {
     private readonly IAccountRepository _accountRepository;
+    private readonly ILogger<CloseAccountUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserService _userService;
 
@@ -25,14 +27,17 @@ public sealed class CloseAccountUseCase : ICloseAccountUseCase
     /// <param name="accountRepository">Account Repository.</param>
     /// <param name="userService">User Service.</param>
     /// <param name="unitOfWork"></param>
+    /// <param name="logger"></param>
     public CloseAccountUseCase(
         IAccountRepository accountRepository,
         IUserService userService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILogger<CloseAccountUseCase> logger)
     {
         this._accountRepository = accountRepository;
         this._userService = userService;
         this._unitOfWork = unitOfWork;
+        this._logger = logger;
         this._outputPort = new CloseAccountPresenter();
     }
 
@@ -50,6 +55,10 @@ public sealed class CloseAccountUseCase : ICloseAccountUseCase
 
     private async Task CloseAccountInternal(AccountId accountId, string externalUserId)
     {
+        this._logger.LogInformation(
+            "Closing account {AccountId} for user {UserId}",
+            accountId, externalUserId);
+
         IAccount account = await this._accountRepository
             .Find(accountId, externalUserId)
             .ConfigureAwait(false);
@@ -58,6 +67,9 @@ public sealed class CloseAccountUseCase : ICloseAccountUseCase
         {
             if (!closingAccount.IsClosingAllowed())
             {
+                this._logger.LogWarning(
+                    "Account closure denied: account {AccountId} still has funds",
+                    accountId);
                 this._outputPort.HasFunds();
                 return;
             }
@@ -65,10 +77,15 @@ public sealed class CloseAccountUseCase : ICloseAccountUseCase
             await this.Close(closingAccount)
                 .ConfigureAwait(false);
 
+            this._logger.LogInformation(
+                "Account {AccountId} closed successfully",
+                accountId);
+
             this._outputPort.Ok(closingAccount);
             return;
         }
 
+        this._logger.LogWarning("Account closure failed: account {AccountId} not found", accountId);
         this._outputPort.NotFound();
     }
 

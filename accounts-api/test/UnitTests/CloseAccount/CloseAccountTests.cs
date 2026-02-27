@@ -9,6 +9,7 @@ using Domain;
 using Domain.Credits;
 using Domain.ValueObjects;
 using Infrastructure.DataAccess;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 public sealed class CloseAccountTests : IClassFixture<StandardFixture>
@@ -41,19 +42,23 @@ public sealed class CloseAccountTests : IClassFixture<StandardFixture>
         GetAccountPresenter getAccountPresenter = new GetAccountPresenter();
         CloseAccountPresenter closeAccountPresenter = new CloseAccountPresenter();
 
-        GetAccountUseCase getAccountUseCase = new GetAccountUseCase(this._fixture.AccountRepositoryFake);
+        GetAccountUseCase getAccountUseCase = new GetAccountUseCase(
+            this._fixture.AccountRepositoryFake,
+            NullLogger<GetAccountUseCase>.Instance);
 
         WithdrawUseCase withdrawUseCase = new WithdrawUseCase(
             this._fixture.AccountRepositoryFake,
             this._fixture.UnitOfWork,
             this._fixture.EntityFactory,
             this._fixture.TestUserService,
-            this._fixture.CurrencyExchangeFake);
+            this._fixture.CurrencyExchangeFake,
+            NullLogger<WithdrawUseCase>.Instance);
 
         CloseAccountUseCase sut = new CloseAccountUseCase(
             this._fixture.AccountRepositoryFake,
             this._fixture.TestUserService,
-            this._fixture.UnitOfWork);
+            this._fixture.UnitOfWork,
+            NullLogger<CloseAccountUseCase>.Instance);
 
         sut.SetOutputPort(closeAccountPresenter);
         getAccountUseCase.SetOutputPort(getAccountPresenter);

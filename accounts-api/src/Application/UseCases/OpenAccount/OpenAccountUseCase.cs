@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Domain;
 using Domain.Credits;
 using Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 using Services;
 
 /// <inheritdoc />
@@ -16,6 +17,7 @@ public sealed class OpenAccountUseCase : IOpenAccountUseCase
 {
     private readonly IAccountFactory _accountFactory;
     private readonly IAccountRepository _accountRepository;
+    private readonly ILogger<OpenAccountUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserService _userService;
     private IOutputPort _outputPort;
@@ -24,12 +26,14 @@ public sealed class OpenAccountUseCase : IOpenAccountUseCase
         IAccountRepository accountRepository,
         IUnitOfWork unitOfWork,
         IUserService userService,
-        IAccountFactory accountFactory)
+        IAccountFactory accountFactory,
+        ILogger<OpenAccountUseCase> logger)
     {
         this._accountRepository = accountRepository;
         this._unitOfWork = unitOfWork;
         this._userService = userService;
         this._accountFactory = accountFactory;
+        this._logger = logger;
         this._outputPort = new OpenAccountPresenter();
     }
 
@@ -45,6 +49,10 @@ public sealed class OpenAccountUseCase : IOpenAccountUseCase
         string externalUserId = this._userService
             .GetCurrentUserId();
 
+        this._logger.LogInformation(
+            "Opening new account for user {UserId} with initial deposit {Amount} {Currency}",
+            externalUserId, amountToDeposit.Amount, amountToDeposit.Currency);
+
         Account account = this._accountFactory
             .NewAccount(externalUserId, amountToDeposit.Currency);
 
@@ -53,6 +61,10 @@ public sealed class OpenAccountUseCase : IOpenAccountUseCase
 
         await this.Deposit(account, credit)
             .ConfigureAwait(false);
+
+        this._logger.LogInformation(
+            "Account {AccountId} opened successfully for user {UserId}",
+            account.AccountId, externalUserId);
 
         this._outputPort?.Ok(account);
     }
