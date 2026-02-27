@@ -1,12 +1,29 @@
-name: .NET Core
+name: CI/CD Pipeline
 
-on: [push]
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  REGISTRY_PREFIX: ghcr.io/atypical-consulting
+  DOTNET_VERSION: '10.0.x'
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  build_docker_image:
+  # ─────────────────────────────────────────────
+  # Stage 1: Build and Test
+  # ─────────────────────────────────────────────
+  build-and-test:
+    runs-on: ubuntu-latest
     env:
       PersistenceModule__DefaultConnection: Host=localhost;Port=5432;Database=Accounts;Username=postgres;Password=YourStrong!Passw0rd
-    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:17
@@ -21,23 +38,160 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
-    - name: Cache NuGet packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
-    - name: Build and Run Tests
-      run: |
-        dotnet --version
-        dotnet build
-        pushd accounts-api
-        dotnet tool update --global dotnet-ef
-        dotnet ef database update --project src/Infrastructure --startup-project src/WebApi
-        popd
-        dotnet test
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Run database migrations
+        run: |
+          dotnet tool update --global dotnet-ef
+          pushd accounts-api
+          dotnet ef database update --project src/Infrastructure --startup-project src/WebApi
+          popd
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build
+
+  # ─────────────────────────────────────────────
+  # Stage 2: Build and Push Container Images
+  # ─────────────────────────────────────────────
+  build-images:
+    needs: build-and-test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: accounts-api
+            dockerfile: accounts-api/src/WebApi/Dockerfile
+            context: accounts-api
+          - name: wallet-app
+            dockerfile: accounts-api/src/WalletApp/Dockerfile
+            context: accounts-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_PREFIX }}/${{ matrix.name }}
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # ─────────────────────────────────────────────
+  # Stage 3a: Deploy to Staging (auto on develop)
+  # ─────────────────────────────────────────────
+  deploy-staging:
+    needs: build-images
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Deploy to staging
+        run: |
+          helm upgrade --install clean-architecture \
+            ./k8s/charts/clean-architecture \
+            -f ./k8s/charts/clean-architecture/values.yaml \
+            -f ./k8s/charts/clean-architecture/values.staging.yaml \
+            --set accountsApi.image.tag="${GITHUB_SHA::7}" \
+            --set walletApp.image.tag="${GITHUB_SHA::7}" \
+            --set postgresql.password="${{ secrets.POSTGRES_PASSWORD }}" \
+            --namespace clean-architecture-staging \
+            --create-namespace \
+            --wait \
+            --timeout 5m
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment -n clean-architecture-staging --timeout=3m
+
+  # ─────────────────────────────────────────────
+  # Stage 3b: Deploy to Production (on tag, manual approval)
+  # ─────────────────────────────────────────────
+  deploy-production:
+    needs: build-images
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Set up kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to production
+        run: |
+          helm upgrade --install clean-architecture \
+            ./k8s/charts/clean-architecture \
+            -f ./k8s/charts/clean-architecture/values.yaml \
+            -f ./k8s/charts/clean-architecture/values.production.yaml \
+            --set accountsApi.image.tag="${{ steps.version.outputs.version }}" \
+            --set walletApp.image.tag="${{ steps.version.outputs.version }}" \
+            --set postgresql.password="${{ secrets.POSTGRES_PASSWORD }}" \
+            --namespace clean-architecture-production \
+            --create-namespace \
+            --wait \
+            --timeout 10m
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment -n clean-architecture-production --timeout=5m
