@@ -5,19 +5,25 @@ on: [push]
 jobs:
   build_docker_image:
     env:
-      PersistenceModule__DefaultConnection: Server=localhost;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts;
+      PersistenceModule__DefaultConnection: Server=localhost;User Id=sa;Password=${{ secrets.SA_PASSWORD }};Database=Accounts;
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-dotnet@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '6.0.x'
-        include-prerelease: true
+        dotnet-version: '10.0.x'
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
     - name: Setup Database then Run Tests
       run: |
         dotnet --version
-        docker pull mcr.microsoft.com/mssql/server:2019-latest
-        docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=<YourStrong!Passw0rd>' -p 1433:1433 --name sql1 -d mcr.microsoft.com/mssql/server:2019-latest
+        docker pull mcr.microsoft.com/mssql/server:2022-latest
+        docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=${{ secrets.SA_PASSWORD }}' -p 1433:1433 --name sql1 -d mcr.microsoft.com/mssql/server:2022-latest
         sleep 10
         dotnet build
         pushd accounts-api
