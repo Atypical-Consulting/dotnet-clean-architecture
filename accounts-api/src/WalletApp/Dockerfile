@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS base
 WORKDIR /app
 EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 RUN apk add --no-cache nodejs npm
 WORKDIR /src
 COPY ["src/WalletApp/WalletApp.csproj", "src/WalletApp/"]
