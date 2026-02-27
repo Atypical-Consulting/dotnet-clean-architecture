@@ -56,9 +56,9 @@ public enum CustomFeature
     Swagger,
 
     /// <summary>
-    ///     Use SQL Server Persistence.
+    ///     Use PostgreSQL Persistence.
     /// </summary>
-    SQLServer,
+    PostgreSql,
 
     /// <summary>
     ///     Uses external exchange service.

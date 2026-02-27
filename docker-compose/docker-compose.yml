@@ -23,11 +23,11 @@ services:
       - ASPNETCORE_BASEPATH=/accounts-api
       - ASPNETCORE_Kestrel__Certificates__Default__Password=MyCertificatePassword
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
-      - PersistenceModule__DefaultConnection=Server=sql1;User Id=sa;Password=${SA_PASSWORD:-YourStrong!Passw0rd};Database=Accounts;
+      - PersistenceModule__DefaultConnection=Host=postgres;Port=5432;Database=Accounts;Username=postgres;Password=${POSTGRES_PASSWORD:-YourStrong!Passw0rd}
     volumes:
       - ../.docker/https:/https:ro
     depends_on:
-      - sql1
+      - postgres
       - accounts-api-seed
   accounts-api-seed:
     container_name: "accounts-api-seed"
@@ -35,10 +35,10 @@ services:
       context: ../accounts-api/
       dockerfile: ../accounts-api-seed/Dockerfile
     environment:
-      - PersistenceModule__DefaultConnection=Server=sql1;User Id=sa;Password=${SA_PASSWORD:-YourStrong!Passw0rd};Database=Accounts;
+      - PersistenceModule__DefaultConnection=Host=postgres;Port=5432;Database=Accounts;Username=postgres;Password=${POSTGRES_PASSWORD:-YourStrong!Passw0rd}
     command: bash -c "/root/.dotnet/tools/dotnet-ef database update --project src/Infrastructure --startup-project src/WebApi"
     depends_on:
-      - sql1
+      - postgres
   wallet-spa:
     image: ${DOCKER_REGISTRY-}wallet
     container_name: "wallet-spa"
@@ -46,10 +46,16 @@ services:
     tty: true        # docker run -t
     build:
       context: ../wallet-spa/
-  sql1:
-    image: "mcr.microsoft.com/mssql/server:2019-latest"
+  postgres:
+    image: "postgres:17"
+    container_name: "postgres"
     environment:
-      SA_PASSWORD: "${SA_PASSWORD:-YourStrong!Passw0rd}"
-      ACCEPT_EULA: "Y"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-YourStrong!Passw0rd}"
+      POSTGRES_DB: "Accounts"
     ports:
-      - "1433:1433"
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

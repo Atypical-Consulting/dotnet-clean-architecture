@@ -12,12 +12,12 @@ services:
       - ASPNETCORE_URLS=https://*:5001
       - ASPNETCORE_Kestrel__Certificates__Default__Password=MyCertificatePassword
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
-      - PersistenceModule__DefaultConnection=Server=sql1;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts;
+      - PersistenceModule__DefaultConnection=Host=postgres;Port=5432;Database=Accounts;Username=postgres;Password=YourStrong!Passw0rd
       - AuthenticationModule__AuthorityUrl=https://localhost:5000
     volumes:
       - ../.docker/https:/https:ro
     depends_on:
-      - sql1
+      - postgres
       - accounts-api-seed
     ports:
       - "5001:5001"
@@ -27,14 +27,20 @@ services:
       context: ../accounts-api/
       dockerfile: ../accounts-api-seed/Dockerfile
     environment:
-      - PersistenceModule__DefaultConnection=Server=sql1;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts;
+      - PersistenceModule__DefaultConnection=Host=postgres;Port=5432;Database=Accounts;Username=postgres;Password=YourStrong!Passw0rd
     command: bash -c "/root/.dotnet/tools/dotnet-ef database update --project src/Infrastructure --startup-project src/WebApi"
     depends_on:
-      - sql1
-  sql1:
-    image: "mcr.microsoft.com/mssql/server:2019-latest"
+      - postgres
+  postgres:
+    image: "postgres:17"
+    container_name: "postgres"
     environment:
-      SA_PASSWORD: "<YourStrong!Passw0rd>"
-      ACCEPT_EULA: "Y"
+      POSTGRES_PASSWORD: "YourStrong!Passw0rd"
+      POSTGRES_DB: "Accounts"
     ports:
-      - "1433:1433"
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
