@@ -1,224 +1,305 @@
-# Clean Architecture with .NET Core & React+Redux :cyclone:
-[![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors) [![Build Status](https://dev.azure.com/ivanpaulovich/clean-architecture-manga/_apis/build/status/ivanpaulovich.clean-architecture-manga?branchName=master)](https://dev.azure.com/ivanpaulovich/clean-architecture-manga/_build/latest?definitionId=20&branchName=master)
+# Clean Architecture with .NET 10
 
-Sample implementation of the **Clean Architecture Principles with .NET Core**. Use cases as central organizing structure, decoupled from frameworks and technology details. Built by small components that are developed and tested in isolation.
+[![Build](https://github.com/Atypical-Consulting/dotnet-clean-architecture/actions/workflows/dotnet-core.yml/badge.svg)](https://github.com/Atypical-Consulting/dotnet-clean-architecture/actions/workflows/dotnet-core.yml)
+[![License](https://img.shields.io/github/license/Atypical-Consulting/dotnet-clean-architecture)](LICENSE)
 
-We support two versions:
+A production-ready reference implementation of **Clean Architecture** on the .NET 10 stack. Use cases serve as the central organizing structure, fully decoupled from frameworks and infrastructure details. The solution is orchestrated with **.NET Aspire**, rendered with **Blazor Web App + Tailwind CSS**, backed by **PostgreSQL**, and deployable to **Kubernetes** via Helm.
 
-- [.NET 6](https://github.com/ivanpaulovich/clean-architecture-manga/tree/main) - .NET 6.
-- [.NET 5](https://github.com/ivanpaulovich/clean-architecture-manga/tree/dotnet5.0) - .NET 5.
-- [.NET Core 3.1](https://github.com/ivanpaulovich/clean-architecture-manga/tree/dotnet3.1) - .NET Core 3.1.
+---
 
-> Hit the `WATCH` button to get the latest Clean Architecture updates.
+## Table of Contents
 
-Manga is a Virtual Wallet Solution in which the customer register an account then manage the balance by `Deposit`, `Withdraw` and `Transfer` operations.
+- [Project Overview](#project-overview)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Development Guide](#development-guide)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Architecture Decisions](#architecture-decisions)
+- [Contributing](#contributing)
+- [License](#license)
 
-We also support the React client:
+---
 
-[![React+Redux Demo](https://raw.githubusercontent.com/ivanpaulovich/clean-architecture-manga/docs/docs/clean-architecture-manga-react.png)](https://clean-architecture-manga.azurewebsites.net)
+## Project Overview
 
-## Build & Run
+This project demonstrates how to build a modular, testable, and maintainable application using Clean Architecture principles on modern .NET. The domain models a **Virtual Wallet** where customers can register accounts and manage their balance through Deposit, Withdraw, and Transfer operations.
 
-To startup the whole solution, execute the following command:
+Key goals:
 
-Windows:
+- **Separation of concerns** -- Domain and Application layers have zero dependency on infrastructure or UI frameworks.
+- **Testability** -- Every layer is independently testable with unit, integration, component, and end-to-end tests.
+- **Cloud-native readiness** -- .NET Aspire orchestration, OpenTelemetry observability, container publishing, and Kubernetes deployment are built in from the start.
 
-```ps1
-PS cd .docker && ./setup.ps1
+---
+
+## Architecture
+
+```
++--------------------------------------------------------------+
+|                        Presentation                          |
+|  +------------------------+  +----------------------------+  |
+|  |   WalletApp (Blazor)   |  |   WebApi (REST + OpenAPI)  |  |
+|  |   Tailwind CSS          |  |   Scalar API Docs          |  |
+|  +----------+-------------+  +------------+---------------+  |
+|             |                             |                  |
++--------------------------------------------------------------+
+              |                             |
+              v                             v
++--------------------------------------------------------------+
+|                        Application                           |
+|  Use Cases / Input & Output Ports / Presenters               |
++-------------------------------+------------------------------+
+                                |
+                                v
++--------------------------------------------------------------+
+|                          Domain                              |
+|  Entities / Value Objects / Aggregate Roots / Repository      |
+|  Interfaces / Domain Events                                  |
++--------------------------------------------------------------+
+                                ^
+                                |
++--------------------------------------------------------------+
+|                       Infrastructure                         |
+|  EF Core (PostgreSQL) / Repository Implementations           |
++--------------------------------------------------------------+
+
++--------------------------------------------------------------+
+|                       Cross-Cutting                          |
+|  AppHost (.NET Aspire) / ServiceDefaults (OpenTelemetry,     |
+|  Resilience, Service Discovery)                              |
++--------------------------------------------------------------+
 ```
 
-MacOS:
+**Dependency rule:** Dependencies always point inward. Domain has no external references. Application depends only on Domain. Infrastructure and Presentation depend on Application (and transitively on Domain), but never the other way around.
 
-```sh
-$ cd .docker && ./setup.sh
+---
+
+## Tech Stack
+
+| Layer            | Technology                                         |
+| ---------------- | -------------------------------------------------- |
+| Runtime          | .NET 10 / C# (preview)                            |
+| Frontend         | Blazor Web App + Tailwind CSS                      |
+| API              | ASP.NET Core Web API + Scalar (OpenAPI docs)       |
+| Auth             | ASP.NET Core Identity + OpenIddict                 |
+| Database         | PostgreSQL (via Npgsql + EF Core 10)               |
+| Orchestration    | .NET Aspire 13.1                                   |
+| Observability    | OpenTelemetry (traces, metrics, logs)              |
+| Logging          | Serilog (structured, OTLP sink)                    |
+| Resilience       | Microsoft.Extensions.Http.Resilience               |
+| Feature Flags    | Microsoft.FeatureManagement                        |
+| API Versioning   | Asp.Versioning.Mvc                                 |
+| Testing          | xUnit, Testcontainers, Coverlet                    |
+| Containerization | .NET SDK container publishing (OCI)                |
+| Deployment       | Kubernetes + Helm                                  |
+| CI/CD            | GitHub Actions                                     |
+
+---
+
+## Project Structure
+
+```
+accounts-api/
+  src/
+    AppHost/            .NET Aspire orchestrator (entry point)
+    ServiceDefaults/    Shared OpenTelemetry, resilience, service discovery
+    Domain/             Entities, value objects, repository interfaces
+    Application/        Use cases, input/output ports, presenters
+    Infrastructure/     EF Core DbContext, repository implementations
+    WebApi/             REST controllers, auth, OpenAPI, feature flags
+    WalletApp/          Blazor Web App frontend (Tailwind CSS)
+  test/
+    UnitTests/          Domain and Application unit tests
+    IntegrationTests/   Infrastructure tests (Testcontainers + PostgreSQL)
+    ComponentTests/     HTTP-level component tests
+    EndToEndTests/      Full-stack E2E tests
+k8s/
+  charts/
+    clean-architecture/ Helm chart (staging + production values)
 ```
 
-Then the following containers should be running on `docker ps`:
+---
 
-| Application 	      | URL                                                                           |
-|-------------------- | ----------------------------------------------------------------------------- |
-| NGINX 	          | https://wallet.local:8081                                                     |
-| Wallet SPA 	      | https://wallet.local:8081                                                     |
-| Accounts API 	      | https://wallet.local:8081/accounts-api                                        |
-| Identity Server 	  | https://wallet.local:8081/identity-server	                                  |
-| SQL Server 	      | Server=localhost;User Id=sa;Password=***;Database=Accounts; |
+## Getting Started
 
-Browse to [https://wallet.local:8081](https://wallet.local:8081) then click on Log In. If asked trust the [self-signed certificate](https://stackoverflow.com/questions/21397809/create-a-trusted-self-signed-ssl-cert-for-localhost-for-use-with-express-node).
+### Prerequisites
 
-## Configuring Secrets
+| Requirement           | Minimum Version | Notes                                    |
+| --------------------- | --------------- | ---------------------------------------- |
+| .NET SDK              | 10.0            | [Download](https://dot.net/download)     |
+| Docker                | 24+             | Required for PostgreSQL via Aspire        |
+| Node.js (optional)    | 20+             | Only if modifying Tailwind CSS styles     |
 
-**Never commit real credentials to the repository.**
+### Run with .NET Aspire
 
-### Docker Compose (.env)
+```bash
+# Clone the repository
+git clone https://github.com/Atypical-Consulting/dotnet-clean-architecture.git
+cd dotnet-clean-architecture
 
-Copy the example environment file and fill in your values:
-
-```sh
-cp .env.example .env
-# Edit .env with your actual secrets (SA_PASSWORD, Google OAuth, etc.)
+# Start the full stack (PostgreSQL, WebApi, WalletApp)
+dotnet run --project accounts-api/src/AppHost
 ```
 
-The `.env` file is gitignored and will be picked up automatically by `docker-compose`. The `docker-compose.yml` references these variables with sensible defaults (e.g. `${SA_PASSWORD:-YourStrong!Passw0rd}`).
+Aspire will automatically provision a PostgreSQL container, run database migrations, and start all services.
 
-### GitHub Actions
+### Access URLs
 
-For CI/CD, store secrets in **GitHub repository secrets** and reference them in workflow files as `${{ secrets.SECRET_NAME }}`.
+Once running, open the **Aspire Dashboard** URL shown in the terminal (typically `https://localhost:17222`) to see all resources. From there you can navigate to:
 
-## Motivation
+| Service           | Description                              |
+| ----------------- | ---------------------------------------- |
+| Aspire Dashboard  | Orchestration dashboard with logs, traces, metrics |
+| WalletApp         | Blazor Web App frontend                  |
+| WebApi            | REST API (append `/scalar` for API docs) |
+| PgAdmin           | PostgreSQL administration UI             |
 
-> Learn how to design modular applications.
->
-> Explore the .NET Core features.
+Ports are dynamically assigned by Aspire. Check the dashboard for exact URLs.
 
-### Learn how to design modular applications
+---
 
-Learning how to design modular applications will help you become a better engineer. Designing modular applications is the holy grail of software architecture, it is hard to find engineers experienced on designing applications which allows adding new features in a steady speed.
+## Development Guide
 
-### Explore the .NET Core features
+### How to Add a New Use Case
 
-.NET Core brings a sweet development environment, an extensible and cross-platform framework. We will explore the benefits of it in the infrastructure layer and we will reduce its importance in the application and domain layers. The same rule is applied for modern C# language syntax.
+1. **Define the use case interface** in `Application/` (e.g., `ITransferUseCase`).
+2. **Create input/output ports** -- an input DTO and an output port (presenter interface).
+3. **Implement the use case** in `Application/UseCases/`, injecting repository interfaces from `Domain/`.
+4. **Wire the presenter** in `WebApi/` -- create a controller action that instantiates the presenter and calls the use case.
+5. **Register in DI** -- add the use case to the service collection.
 
-### Learn from the open source community
+### How to Add a New Entity
 
-This is continually updated, open source project.
+1. **Create the entity** in `Domain/` following the existing patterns (see `Account.cs`).
+2. **Define the repository interface** in `Domain/` (e.g., `IAccountRepository`).
+3. **Implement the repository** in `Infrastructure/` using EF Core.
+4. **Add EF Core configuration** -- create an `EntityTypeConfiguration<T>` class.
+5. **Create and apply a migration:**
 
-[Contributions](#contributors-) are welcome!
+   ```bash
+   cd accounts-api/src/WebApi
+   dotnet ef migrations add AddNewEntity --project ../Infrastructure
+   ```
+
+### Feature Flag Configuration
+
+Feature flags are managed via `Microsoft.FeatureManagement`. Define flags in `appsettings.json`:
+
+```json
+{
+  "FeatureManagement": {
+    "Transfer": true,
+    "ExcelExport": false
+  }
+}
+```
+
+Use `[FeatureGate("Transfer")]` on controllers or check programmatically with `IFeatureManager`.
+
+---
+
+## Testing
+
+### Prerequisites
+
+- **Docker** must be running (integration tests use Testcontainers to spin up PostgreSQL).
+
+### Run All Tests
+
+```bash
+# From the repository root
+dotnet test accounts-api/
+
+# With coverage report
+dotnet test accounts-api/ --collect:"XPlat Code Coverage"
+```
+
+### Test Types
+
+| Type          | Project               | What It Tests                                  |
+| ------------- | --------------------- | ---------------------------------------------- |
+| Unit          | `test/UnitTests`      | Domain entities, value objects, use cases       |
+| Integration   | `test/IntegrationTests` | EF Core repositories against real PostgreSQL  |
+| Component     | `test/ComponentTests` | HTTP pipeline (controllers, middleware, DI)     |
+| End-to-End    | `test/EndToEndTests`  | Full application stack                         |
+
+Integration tests use **Testcontainers** to launch a real PostgreSQL instance in Docker, ensuring database behavior matches production.
+
+---
+
+## Deployment
+
+### Kubernetes with Helm
+
+The `k8s/charts/clean-architecture/` Helm chart deploys the full stack (WebApi, WalletApp, PostgreSQL) to any Kubernetes cluster.
+
+```bash
+# Build and publish container images
+cd k8s
+./build-images.sh
+
+# Deploy to staging
+helm upgrade --install clean-arch ./charts/clean-architecture \
+  -f ./charts/clean-architecture/values.staging.yaml \
+  -n clean-arch --create-namespace
+
+# Deploy to production
+helm upgrade --install clean-arch ./charts/clean-architecture \
+  -f ./charts/clean-architecture/values.production.yaml \
+  -n clean-arch --create-namespace
+```
+
+### Container Images
+
+The solution uses .NET SDK container publishing. Each service declares its container registry and image name in its `.csproj`:
+
+| Service    | Image                                          |
+| ---------- | ---------------------------------------------- |
+| WebApi     | `ghcr.io/atypical-consulting/accounts-api`     |
+| WalletApp  | `ghcr.io/atypical-consulting/wallet-app`       |
+
+### Environment Configuration
+
+| Environment | Values File              | Key Differences                      |
+| ----------- | ------------------------ | ------------------------------------ |
+| Staging     | `values.staging.yaml`    | Reduced replicas, debug logging      |
+| Production  | `values.production.yaml` | HA replicas, production secrets      |
+
+---
+
+## Architecture Decisions
+
+| Decision                          | Rationale                                                                                          |
+| --------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **.NET 10**                       | Latest LTS-track release with performance improvements, minimal API enhancements, and C# language features. |
+| **Blazor Web App**                | Server and client rendering in a single project, eliminating the need for a separate SPA framework. |
+| **Tailwind CSS**                  | Utility-first CSS integrated into the .NET build pipeline; no runtime CSS framework dependency.     |
+| **ASP.NET Core Identity + OpenIddict** | Standards-based OAuth 2.0 / OpenID Connect without external identity provider dependency.      |
+| **.NET Aspire**                   | Declarative orchestration of services and dependencies (PostgreSQL, PgAdmin) with built-in service discovery, health checks, and dashboard. |
+| **PostgreSQL**                    | Open-source, battle-tested relational database with excellent .NET support via Npgsql.             |
+| **OpenTelemetry**                 | Vendor-neutral observability (traces, metrics, logs) with OTLP export to any compatible backend.   |
+| **Serilog**                       | Structured logging with rich sinks; OTLP sink feeds directly into the OpenTelemetry pipeline.      |
+| **Testcontainers**                | Real database instances in tests; no in-memory fakes that mask production behavior.                |
+| **Kubernetes + Helm**             | Production-grade container orchestration with environment-specific configuration via values files.  |
+| **Clean Architecture**            | Framework-independent domain and application layers enable long-term maintainability and testability. |
+
+---
 
 ## Contributing
 
-> Learn from the community.
+Contributions are welcome. Please:
 
-Feel free to submit pull requests to help:
+1. Fork the repository.
+2. Create a feature branch (`git checkout -b feature/my-feature`).
+3. Write tests for your changes.
+4. Ensure all tests pass (`dotnet test accounts-api/`).
+5. Submit a pull request.
 
-* Fix errors.
-* Refactoring.
-* Build the Front End.
-* Submit issues and bugs.
+---
 
-> The [Discussão em Português](https://github.com/ivanpaulovich/clean-architecture-manga/issues/149) is pinned for the large community of brazillian developers. <img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/320/twitter/248/flag-brazil_1f1e7-1f1f7.png" width="32" height="32" />
+## License
 
-## Index of Clean Architecture Manga
-### [Home](https://github.com/ivanpaulovich/clean-architecture-manga/wiki)
-- [Motivation](https://github.com/ivanpaulovich/clean-architecture-manga/wiki#motivation)
-  * [Learn how to design modular applications](https://github.com/ivanpaulovich/clean-architecture-manga/wiki#learn-how-to-design-modular-applications)
-  * [Explore the .NET Core features](https://github.com/ivanpaulovich/clean-architecture-manga/wiki#explore-the-net-core-features)
-  * [Learn from the open source community](https://github.com/ivanpaulovich/clean-architecture-manga/wiki#learn-from-the-open-source-community)
-- [Contributing](https://github.com/ivanpaulovich/clean-architecture-manga/wiki#contributing)
-### [Use Cases](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Use-Cases)
-### [Flow of Control](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Flow-of-Control)
-* [Register Flow of Control](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Flow-of-Control#register-flow-of-control)
-* [Get Customer Details Flow of Control](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Flow-of-Control#get-customer-details-flow-of-control)
-### [Architecture Styles](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Architecture-Styles)
-* [Hexagonal Architecture Style](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Architecture-Styles#ports-and-adapters-architecture-style)
-  * [Ports](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Architecture-Styles#ports)
-  * [Adapters](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Architecture-Styles#adapters)
-  * [The Left Side](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Architecture-Styles#the-left-side)
-  * [The Right Side](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Architecture-Styles#the-right-side)
-* [Onion Architecture Style](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Architecture-Styles#onion-architecture-style)
-* [Clean Architecture Style](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Architecture-Styles#clean-architecture-style)
-### [Design Patterns](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns)
-* [Controller](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#controller)
-* [ViewModel](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#viewmodel)
-* [Presenter](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#presenter)
-    * [Standard Output](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#standard-output)
-    * [Error Output](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#error-output)
-    * [Alternative Output](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#alternative-output)
-* [Unit of Work](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#unit-of-work)
-* [First-Class Collections](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#first-class-collections)
-* [Factory](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Design-Patterns#factory)
-### [Domain-Driven Design Patterns](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Domain-Driven-Design-Patterns)
-* [Value Object](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Domain-Driven-Design-Patterns#value-object)
-* [Entity](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Domain-Driven-Design-Patterns#entity)
-* [Aggregate Root](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Domain-Driven-Design-Patterns#aggregate-root)
-* [Repository](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Domain-Driven-Design-Patterns#repository)
-* [Use Case](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Domain-Driven-Design-Patterns#use-case)
-### [Separation of Concerns](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Separation-of-Concerns#separation-of-concerns)
-- [Domain](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Separation-of-Concerns#domain)
-- [Application](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Separation-of-Concerns#application)
-- [Infrastructure](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Separation-of-Concerns#infrastructure)
-- [User Interface](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Separation-of-Concerns#user-interface)
-### [Encapsulation](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Encapsulation)
-### [Test-Driven Development TDD](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Test-Driven-Development)
-### [Fakes](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Fakes)
-### [SOLID](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/SOLID)
-- [Single Responsibility Principle](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/SOLID#single-responsibility-principle)
-- [Open-Closed Principle](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/SOLID#open-closed-principle)
-- [Liskov Substitution Principle](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/SOLID#liskov-substitution-principle)
-- [Interface Segregation Principle](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/SOLID#interface-segregation-principle)
-- [Dependency Inversion Principle](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/SOLID#dependency-inversion-principle)
-### [.NET Core Web API](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/.NET-Core-WebAPI#.net-core-webapi)
-* [Swagger and API Versioning](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/.NET-Core-WebAPI#swagger-and-api-versioning)
-* [Microsoft Extensions](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/.NET-Core-WebAPI#microsoft-extensions)
-* [Feature Flags](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/.NET-Core-WebAPI#feature-flags)
-* [Logging](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/.NET-Core-WebAPI#logging)
-* [Data Annotations](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/.NET-Core-WebAPI#data-annotations)
-* [Authentication](#authentication)
-* [Authorization](#authorization)
-### [Entity Framework Core](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Entity-Framework-Core)
-* [Add Migration](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Entity-Framework-Core#add-migration)
-* [Update Database](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Entity-Framework-Core#update-database)
-### [Environment Configurations](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Environment-Configurations)
-### [DevOps](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/DevOps)
-* [Running the Application Locally](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/DevOps#running-the-application-locally)
-* [Running the Tests Locally](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/DevOps#running-the-tests-locally)
-* [Continuous Integration & Continuous Deployment](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/DevOps#continuous-integration-continuous-deployment)
-### [Docker](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Docker)
-* [SQL Server](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Docker#sql-server)
-### [Related Content and Projects](https://github.com/ivanpaulovich/clean-architecture-manga/wiki/Related-Content-and-Projects)
-
-## Contributors ✨
-
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
-
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://paulovich.net"><img src="https://avatars3.githubusercontent.com/u/7133698?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ivan Paulovich</b></sub></a><br /><a href="#design-ivanpaulovich" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=ivanpaulovich" title="Tests">⚠️</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=ivanpaulovich" title="Code">💻</a></td>
-    <td align="center"><a href="https://spelos.net/"><img src="https://avatars3.githubusercontent.com/u/21304428?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Petr Sedláček</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=petrspelos" title="Tests">⚠️</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=petrspelos" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/luizgustavogp"><img src="https://avatars2.githubusercontent.com/u/5147169?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Gus</b></sub></a><br /><a href="#design-luizgustavogp" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=luizgustavogp" title="Tests">⚠️</a></td>
-    <td align="center"><a href="https://github.com/arulconsultant"><img src="https://avatars0.githubusercontent.com/u/47856951?v=4?s=100" width="100px;" alt=""/><br /><sub><b>arulconsultant</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=arulconsultant" title="Tests">⚠️</a></td>
-    <td align="center"><a href="https://github.com/guilhermeps"><img src="https://avatars1.githubusercontent.com/u/38736244?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Guilherme Silva</b></sub></a><br /><a href="#design-guilhermeps" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=guilhermeps" title="Tests">⚠️</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=guilhermeps" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/ostorc"><img src="https://avatars1.githubusercontent.com/u/13519594?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Ondřej Štorc</b></sub></a><br /><a href="#design-ostorc" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=ostorc" title="Tests">⚠️</a></td>
-    <td align="center"><a href="https://github.com/MarlonMiranda"><img src="https://avatars3.githubusercontent.com/u/12774904?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Marlon Miranda da Silva</b></sub></a><br /><a href="#design-MarlonMiranda" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=MarlonMiranda" title="Tests">⚠️</a></td>
-    <td align="center"><a href="https://github.com/NicoCG"><img src="https://avatars1.githubusercontent.com/u/33652180?v=4?s=100" width="100px;" alt=""/><br /><sub><b>NicoCG</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=NicoCG" title="Tests">⚠️</a></td>
-    <td align="center"><a href="https://stackoverflow.com/users/2072198/fals"><img src="https://avatars2.githubusercontent.com/u/3750960?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Filipe Augusto Lima de Souza</b></sub></a><br /><a href="#design-fals" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=fals" title="Tests">⚠️</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=fals" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/sshaw-sml"><img src="https://avatars3.githubusercontent.com/u/33876744?v=4?s=100" width="100px;" alt=""/><br /><sub><b>sshaw-sml</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=sshaw-sml" title="Tests">⚠️</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=sshaw-sml" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/matheusneder"><img src="https://avatars1.githubusercontent.com/u/6011646?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Matheus Neder</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=matheusneder" title="Tests">⚠️</a></td>
-    <td align="center"><a href="https://github.com/matiienkodimitri"><img src="https://avatars2.githubusercontent.com/u/53822759?v=4?s=100" width="100px;" alt=""/><br /><sub><b>димитрий матиенко</b></sub></a><br /><a href="#design-matiienkodimitri" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=matiienkodimitri" title="Tests">⚠️</a></td>
-    <td align="center"><a href="https://github.com/morphlogic"><img src="https://avatars1.githubusercontent.com/u/29184473?v=4?s=100" width="100px;" alt=""/><br /><sub><b>morphlogic</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=morphlogic" title="Tests">⚠️</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=morphlogic" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/felpasl"><img src="https://avatars3.githubusercontent.com/u/5658895?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Felipe Lambert</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=felpasl" title="Tests">⚠️</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=felpasl" title="Code">💻</a></td>
-    <td align="center"><a href="https://matray.website"><img src="https://avatars2.githubusercontent.com/u/9035444?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Philippe Matray</b></sub></a><br /><a href="#design-phmatray" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=phmatray" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/leandrofagundes"><img src="https://avatars1.githubusercontent.com/u/10363927?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Leandro Fagundes</b></sub></a><br /><a href="#question-leandrofagundes" title="Answering Questions">💬</a></td>
-    <td align="center"><a href="https://github.com/bommen"><img src="https://avatars2.githubusercontent.com/u/52955252?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Bart van Ommen</b></sub></a><br /><a href="#ideas-bommen" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=bommen" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/qpippop"><img src="https://avatars0.githubusercontent.com/u/57645455?v=4?s=100" width="100px;" alt=""/><br /><sub><b>qpippop</b></sub></a><br /><a href="#ideas-qpippop" title="Ideas, Planning, & Feedback">🤔</a></td>
-    <td align="center"><a href="https://www.linkedin.com/in/cesinhaugusto/"><img src="https://avatars1.githubusercontent.com/u/25554544?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Cesar Pereira</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=cesinhaugusto" title="Code">💻</a></td>
-    <td align="center"><a href="http://www.edvaldofarias.com.br"><img src="https://avatars2.githubusercontent.com/u/40303187?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Edvaldo Farias</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=edvaldofarias" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://codepen.io/sergiobroccardi/posts/published/"><img src="https://avatars1.githubusercontent.com/u/25184212?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Sergio Broccardi</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=sbroccardi" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/cuno92"><img src="https://avatars0.githubusercontent.com/u/58431215?v=4?s=100" width="100px;" alt=""/><br /><sub><b>cuno92</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=cuno92" title="Code">💻</a></td>
-    <td align="center"><a href="http://vmamore.com.br"><img src="https://avatars0.githubusercontent.com/u/26505439?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Vinícius Mamoré</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=vmamore" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/dyavolick"><img src="https://avatars1.githubusercontent.com/u/3098528?v=4?s=100" width="100px;" alt=""/><br /><sub><b>dyavolick</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=dyavolick" title="Code">💻</a></td>
-    <td align="center"><a href="https://github.com/felipetofoli"><img src="https://avatars0.githubusercontent.com/u/1364311?v=4?s=100" width="100px;" alt=""/><br /><sub><b>felipetofoli</b></sub></a><br /><a href="#design-felipetofoli" title="Design">🎨</a> <a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=felipetofoli" title="Code">💻</a></td>
-  </tr>
-  <tr>
-    <td align="center"><a href="https://github.com/charithdesilva"><img src="https://avatars.githubusercontent.com/u/5924323?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Charith De Silva</b></sub></a><br /><a href="https://github.com/ivanpaulovich/clean-architecture-manga/commits?author=charithdesilva" title="Code">💻</a></td>
-  </tr>
-</table>
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
-
-> Hit the `FORK` button and show Clean Architecture on your profile. <img src="https://emojis.slackmojis.com/emojis/images/1469223471/679/charmander_dancing.gif?1469223471" width="32" height="32" />
+This project is licensed under the terms of the [Apache 2.0 License](LICENSE).
