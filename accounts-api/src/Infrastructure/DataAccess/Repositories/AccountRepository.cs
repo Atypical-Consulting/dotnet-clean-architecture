@@ -45,17 +45,17 @@ public sealed class AccountRepository : IAccountRepository
     {
         await this._context
             .Database
-            .ExecuteSqlRawAsync("DELETE FROM Debit WHERE AccountId=@p0", accountId.Id)
+            .ExecuteSqlRawAsync("DELETE FROM \"Debit\" WHERE \"AccountId\"=@p0", accountId.Id)
             .ConfigureAwait(false);
 
         await this._context
             .Database
-            .ExecuteSqlRawAsync("DELETE FROM Credit WHERE AccountId=@p0", accountId.Id)
+            .ExecuteSqlRawAsync("DELETE FROM \"Credit\" WHERE \"AccountId\"=@p0", accountId.Id)
             .ConfigureAwait(false);
 
         await this._context
             .Database
-            .ExecuteSqlRawAsync("DELETE FROM Account WHERE AccountId=@p0", accountId.Id)
+            .ExecuteSqlRawAsync("DELETE FROM \"Account\" WHERE \"AccountId\"=@p0", accountId.Id)
             .ConfigureAwait(false);
     }
 
