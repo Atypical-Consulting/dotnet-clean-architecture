@@ -5,6 +5,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <ContainerRegistry>ghcr.io/atypical-consulting</ContainerRegistry>
+    <ContainerImageName>wallet-app</ContainerImageName>
+    <ContainerImageTag>latest</ContainerImageTag>
   </PropertyGroup>
 
   <!-- Tailwind CSS Build Integration -->

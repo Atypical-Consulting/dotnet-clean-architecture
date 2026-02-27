@@ -16,6 +16,9 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <IsPackable>false</IsPackable>
     <UserSecretsId>9ad8d4da-a604-4436-acc9-d7ee7c0e590c</UserSecretsId>
+    <ContainerRegistry>ghcr.io/atypical-consulting</ContainerRegistry>
+    <ContainerImageName>accounts-api</ContainerImageName>
+    <ContainerImageTag>latest</ContainerImageTag>
   </PropertyGroup>
 
   <ItemGroup>
