@@ -28,10 +28,15 @@ using ViewModels;
 public sealed class AccountsController : ControllerBase, IOutputPort
 {
     private readonly Notification _notification;
+    private readonly BusinessMetrics _businessMetrics;
 
     private IActionResult _viewModel;
 
-    public AccountsController(Notification notification) => this._notification = notification;
+    public AccountsController(Notification notification, BusinessMetrics businessMetrics)
+    {
+        this._notification = notification;
+        this._businessMetrics = businessMetrics;
+    }
 
     void IOutputPort.Invalid()
     {
@@ -70,6 +75,11 @@ public sealed class AccountsController : ControllerBase, IOutputPort
 
         await useCase.Execute(amount, currency)
             .ConfigureAwait(false);
+
+        if (this._viewModel is OkObjectResult)
+        {
+            this._businessMetrics.RecordAccountOpened();
+        }
 
         return this._viewModel!;
     }

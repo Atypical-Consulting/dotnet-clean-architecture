@@ -1,7 +1,10 @@
 namespace WebApi;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Modules.Common;
+using OpenTelemetry.Metrics;
 
 /// <summary>
 ///     Program entry point.
@@ -18,6 +21,11 @@ public static class Program
 
         // Add Aspire service defaults (OpenTelemetry, health checks, service discovery, resilience)
         builder.AddServiceDefaults();
+
+        // Register custom business metrics and add the meter to OpenTelemetry
+        builder.Services.AddSingleton<BusinessMetrics>();
+        builder.Services.AddOpenTelemetry()
+            .WithMetrics(metrics => metrics.AddMeter(BusinessMetrics.MeterName));
 
         // Configure all application services via the existing Startup class
         var startup = new Startup(builder.Configuration);

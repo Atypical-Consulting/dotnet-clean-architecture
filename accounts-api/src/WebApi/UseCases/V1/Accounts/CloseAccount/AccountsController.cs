@@ -29,13 +29,15 @@ public sealed class AccountsController : ControllerBase, IOutputPort
 {
     private readonly Notification _notification;
     private readonly ICloseAccountUseCase _useCase;
+    private readonly BusinessMetrics _businessMetrics;
 
     private IActionResult _viewModel;
 
-    public AccountsController(ICloseAccountUseCase useCase, Notification notification)
+    public AccountsController(ICloseAccountUseCase useCase, Notification notification, BusinessMetrics businessMetrics)
     {
         this._useCase = useCase;
         this._notification = notification;
+        this._businessMetrics = businessMetrics;
     }
 
     void IOutputPort.Invalid()
@@ -69,6 +71,11 @@ public sealed class AccountsController : ControllerBase, IOutputPort
 
         await this._useCase.Execute(accountId)
             .ConfigureAwait(false);
+
+        if (this._viewModel is OkObjectResult)
+        {
+            this._businessMetrics.RecordAccountClosed();
+        }
 
         return this._viewModel!;
     }

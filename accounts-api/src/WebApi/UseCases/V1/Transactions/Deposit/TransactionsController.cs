@@ -30,10 +30,15 @@ using ViewModels;
 public sealed class TransactionsController : ControllerBase, IOutputPort
 {
     private readonly Notification _notification;
+    private readonly BusinessMetrics _businessMetrics;
 
     private IActionResult _viewModel;
 
-    public TransactionsController(Notification notification) => this._notification = notification;
+    public TransactionsController(Notification notification, BusinessMetrics businessMetrics)
+    {
+        this._notification = notification;
+        this._businessMetrics = businessMetrics;
+    }
 
     void IOutputPort.Invalid()
     {
@@ -73,6 +78,11 @@ public sealed class TransactionsController : ControllerBase, IOutputPort
 
         await useCase.Execute(accountId, amount, currency)
             .ConfigureAwait(false);
+
+        if (this._viewModel is OkObjectResult)
+        {
+            this._businessMetrics.RecordDeposit(amount, currency);
+        }
 
         return this._viewModel!;
     }

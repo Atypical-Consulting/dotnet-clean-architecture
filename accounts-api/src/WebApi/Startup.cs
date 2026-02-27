@@ -9,7 +9,6 @@ using Modules;
 using Modules.Common;
 using Modules.Common.FeatureFlags;
 using Modules.Common.Swagger;
-using Prometheus;
 
 /// <summary>
 ///     Startup.
@@ -63,7 +62,6 @@ public sealed class Startup
             .UseProxy(this.Configuration)
             .UseHealthChecks()
             .UseCustomCors()
-            .UseCustomHttpMetrics()
             .UseRouting()
             .UseAuthentication()
             .UseAuthorization()
@@ -71,7 +69,6 @@ public sealed class Startup
             {
                 endpoints.MapOpenApiEndpoints();
                 endpoints.MapControllers();
-                endpoints.MapMetrics();
             });
     }
 }
