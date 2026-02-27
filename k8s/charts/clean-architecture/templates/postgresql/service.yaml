@@ -1,0 +1,18 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clean-architecture.postgresql.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "clean-architecture.postgresql.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.postgresql.service.type }}
+  ports:
+    - port: {{ .Values.postgresql.service.port }}
+      targetPort: tcp-postgresql
+      protocol: TCP
+      name: tcp-postgresql
+  selector:
+    {{- include "clean-architecture.postgresql.selectorLabels" . | nindent 4 }}
+{{- end }}

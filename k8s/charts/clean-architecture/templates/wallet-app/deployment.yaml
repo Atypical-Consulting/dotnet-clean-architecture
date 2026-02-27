@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "clean-architecture.walletApp.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "clean-architecture.walletApp.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.walletApp.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "clean-architecture.walletApp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "clean-architecture.walletApp.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.walletApp.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: wallet-app
+          image: "{{ .Values.walletApp.image.repository }}:{{ .Values.walletApp.image.tag }}"
+          imagePullPolicy: {{ .Values.walletApp.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.walletApp.containerPort }}
+              protocol: TCP
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: {{ .Values.walletApp.environment | quote }}
+            - name: ASPNETCORE_URLS
+              value: "http://+:{{ .Values.walletApp.containerPort }}"
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.walletApp.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.walletApp.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.walletApp.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.walletApp.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.walletApp.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.walletApp.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.walletApp.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.walletApp.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.walletApp.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.walletApp.probes.readiness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.walletApp.resources | nindent 12 }}

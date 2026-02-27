@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clean-architecture.accountsApi.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "clean-architecture.accountsApi.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.accountsApi.service.type }}
+  ports:
+    - port: {{ .Values.accountsApi.service.port }}
+      targetPort: {{ .Values.accountsApi.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "clean-architecture.accountsApi.selectorLabels" . | nindent 4 }}

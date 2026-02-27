@@ -1,0 +1,33 @@
+{{- if .Values.accountsApi.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "clean-architecture.accountsApi.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "clean-architecture.accountsApi.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "clean-architecture.accountsApi.fullname" . }}
+  minReplicas: {{ .Values.accountsApi.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.accountsApi.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.accountsApi.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.accountsApi.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.accountsApi.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.accountsApi.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

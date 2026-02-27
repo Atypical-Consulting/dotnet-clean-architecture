@@ -1,0 +1,42 @@
+{{- if .Values.accountsApi.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "clean-architecture.accountsApi.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "clean-architecture.accountsApi.labels" . | nindent 4 }}
+  {{- with .Values.accountsApi.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.accountsApi.ingress.className }}
+  ingressClassName: {{ .Values.accountsApi.ingress.className }}
+  {{- end }}
+  {{- if .Values.accountsApi.ingress.tls }}
+  tls:
+    {{- range .Values.accountsApi.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.accountsApi.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
+            backend:
+              service:
+                name: {{ include "clean-architecture.accountsApi.fullname" $ }}
+                port:
+                  number: {{ $.Values.accountsApi.service.port }}
+          {{- end }}
+    {{- end }}
+{{- end }}

@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "clean-architecture.accountsApi.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "clean-architecture.accountsApi.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.accountsApi.autoscaling.enabled }}
+  replicas: {{ .Values.accountsApi.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "clean-architecture.accountsApi.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "clean-architecture.accountsApi.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.accountsApi.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: accounts-api
+          image: "{{ .Values.accountsApi.image.repository }}:{{ .Values.accountsApi.image.tag }}"
+          imagePullPolicy: {{ .Values.accountsApi.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.accountsApi.containerPort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "clean-architecture.fullname" . }}-config
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "clean-architecture.fullname" . }}-secrets
+                  key: POSTGRES_PASSWORD
+            - name: PersistenceModule__DefaultConnection
+              value: {{ include "clean-architecture.postgresql.connectionString" . | quote }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.accountsApi.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.accountsApi.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.accountsApi.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.accountsApi.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.accountsApi.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.accountsApi.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.accountsApi.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.accountsApi.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.accountsApi.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.accountsApi.probes.readiness.failureThreshold }}
+          resources:
+            {{- toYaml .Values.accountsApi.resources | nindent 12 }}
