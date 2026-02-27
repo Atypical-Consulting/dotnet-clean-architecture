@@ -1,0 +1,427 @@
+@page "/accounts/{AccountId:guid}"
+@rendermode InteractiveServer
+@inject AccountApiClient Api
+@inject NavigationManager Navigation
+
+<PageTitle>Account Detail - Wallet App</PageTitle>
+
+@if (_loading)
+{
+    <LoadingSpinner />
+}
+else if (_error is not null)
+{
+    <ErrorAlert Message="@_error" />
+}
+else if (_account is not null)
+{
+    <div class="space-y-6">
+        <SuccessAlert Message="@_successMessage" />
+
+        <!-- Account header -->
+        <div class="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+            <div class="px-4 py-5 sm:px-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-lg font-medium text-gray-900 dark:text-white">Account Details</h2>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">@AccountId</p>
+                    </div>
+                    <div class="mt-4 sm:mt-0">
+                        <span class="text-2xl font-bold @(_account.CurrentBalance >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")">
+                            @_account.CurrentBalance.ToString("N2")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex flex-wrap gap-3" role="toolbar" aria-label="Account actions">
+            <button type="button"
+                    @onclick='() => _activeForm = "deposit"'
+                    class="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                    aria-label="Deposit funds">
+                <svg class="-ml-0.5 mr-1.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Deposit
+            </button>
+            <button type="button"
+                    @onclick='() => _activeForm = "withdraw"'
+                    class="inline-flex items-center rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2"
+                    aria-label="Withdraw funds">
+                <svg class="-ml-0.5 mr-1.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                </svg>
+                Withdraw
+            </button>
+            <button type="button"
+                    @onclick='() => _activeForm = "transfer"'
+                    class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    aria-label="Transfer funds">
+                <svg class="-ml-0.5 mr-1.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                Transfer
+            </button>
+            <button type="button"
+                    @onclick="() => _showCloseConfirm = true"
+                    class="inline-flex items-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    aria-label="Close account">
+                Close Account
+            </button>
+        </div>
+
+        <!-- Inline forms -->
+        @if (_activeForm == "deposit")
+        {
+            <div class="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Deposit Funds</h3>
+                    <EditForm Model="_transactionForm" OnValidSubmit="HandleDeposit" FormName="deposit-form" class="mt-4 space-y-4">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label for="deposit-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                <InputNumber id="deposit-amount" @bind-Value="_transactionForm.Amount"
+                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                             aria-required="true" />
+                            </div>
+                            <div>
+                                <label for="deposit-currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
+                                <InputText id="deposit-currency" @bind-Value="_transactionForm.Currency"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                           aria-required="true" />
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit" disabled="@_submitting"
+                                    class="inline-flex justify-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50">
+                                @(_submitting ? "Processing..." : "Deposit")
+                            </button>
+                            <button type="button" @onclick='() => _activeForm = null'
+                                    class="inline-flex justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-600">
+                                Cancel
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        @if (_activeForm == "withdraw")
+        {
+            <div class="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Withdraw Funds</h3>
+                    <EditForm Model="_transactionForm" OnValidSubmit="HandleWithdraw" FormName="withdraw-form" class="mt-4 space-y-4">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label for="withdraw-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                <InputNumber id="withdraw-amount" @bind-Value="_transactionForm.Amount"
+                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                             aria-required="true" />
+                            </div>
+                            <div>
+                                <label for="withdraw-currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
+                                <InputText id="withdraw-currency" @bind-Value="_transactionForm.Currency"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                           aria-required="true" />
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit" disabled="@_submitting"
+                                    class="inline-flex justify-center rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:opacity-50">
+                                @(_submitting ? "Processing..." : "Withdraw")
+                            </button>
+                            <button type="button" @onclick='() => _activeForm = null'
+                                    class="inline-flex justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-600">
+                                Cancel
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        @if (_activeForm == "transfer")
+        {
+            <div class="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">Transfer Funds</h3>
+                    <EditForm Model="_transferForm" OnValidSubmit="HandleTransfer" FormName="transfer-form" class="mt-4 space-y-4">
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div>
+                                <label for="transfer-dest" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Destination Account ID</label>
+                                <InputText id="transfer-dest" @bind-Value="_transferForm.DestinationAccountId"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                           placeholder="Enter account GUID"
+                                           aria-required="true" />
+                            </div>
+                            <div>
+                                <label for="transfer-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount</label>
+                                <InputNumber id="transfer-amount" @bind-Value="_transferForm.Amount"
+                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                             aria-required="true" />
+                            </div>
+                            <div>
+                                <label for="transfer-currency" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Currency</label>
+                                <InputText id="transfer-currency" @bind-Value="_transferForm.Currency"
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 border"
+                                           aria-required="true" />
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit" disabled="@_submitting"
+                                    class="inline-flex justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50">
+                                @(_submitting ? "Processing..." : "Transfer")
+                            </button>
+                            <button type="button" @onclick='() => _activeForm = null'
+                                    class="inline-flex justify-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-600">
+                                Cancel
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        <!-- Transaction history -->
+        <div class="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
+            <div class="px-4 py-5 sm:px-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Transaction History</h3>
+            </div>
+            @{
+                var allTransactions = _account.Credits
+                    .Select(c => new { c.TransactionId, c.Amount, c.Currency, Type = "Credit", c.TransactionDate })
+                    .Concat(_account.Debits
+                        .Select(d => new { d.TransactionId, d.Amount, d.Currency, Type = "Debit", d.TransactionDate }))
+                    .OrderByDescending(t => t.TransactionDate)
+                    .ToList();
+            }
+            @if (allTransactions.Count == 0)
+            {
+                <div class="px-4 py-8 text-center sm:px-6">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">No transactions yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" aria-label="Transaction history">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Type</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                            @foreach (var tx in allTransactions)
+                            {
+                                <tr>
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                        @tx.TransactionDate.ToString("yyyy-MM-dd HH:mm")
+                                    </td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-sm">
+                                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium @(tx.Type == "Credit" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300")">
+                                            @tx.Type
+                                        </span>
+                                    </td>
+                                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium @(tx.Type == "Credit" ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")">
+                                        @(tx.Type == "Credit" ? "+" : "-")@tx.Amount.ToString("N2") @tx.Currency
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <ConfirmDialog IsVisible="_showCloseConfirm"
+                   Title="Close Account"
+                   Message="Are you sure you want to close this account? This action cannot be undone. The account must have a zero balance."
+                   ConfirmText="Close Account"
+                   OnConfirm="HandleCloseAccount"
+                   OnCancel="() => _showCloseConfirm = false" />
+}
+
+@code {
+    [Parameter] public Guid AccountId { get; set; }
+
+    private AccountDetailsModel? _account;
+    private bool _loading = true;
+    private bool _submitting;
+    private string? _error;
+    private string? _successMessage;
+    private string? _activeForm;
+    private bool _showCloseConfirm;
+
+    private TransactionFormModel _transactionForm = new() { Currency = "USD" };
+    private TransferFormModel _transferForm = new() { Currency = "USD" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAccount();
+    }
+
+    private async Task LoadAccount()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _account = await Api.GetAccountAsync(AccountId);
+            if (_account is null)
+            {
+                _error = "Account not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to load account: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task HandleDeposit()
+    {
+        _submitting = true;
+        _successMessage = null;
+        _error = null;
+        try
+        {
+            var success = await Api.DepositAsync(AccountId, _transactionForm.Amount, _transactionForm.Currency);
+            if (success)
+            {
+                _successMessage = $"Successfully deposited {_transactionForm.Amount:N2} {_transactionForm.Currency}.";
+                _activeForm = null;
+                _transactionForm = new() { Currency = "USD" };
+                await LoadAccount();
+            }
+            else
+            {
+                _error = "Deposit failed. Please check the amount and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Deposit failed: {ex.Message}";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private async Task HandleWithdraw()
+    {
+        _submitting = true;
+        _successMessage = null;
+        _error = null;
+        try
+        {
+            var success = await Api.WithdrawAsync(AccountId, _transactionForm.Amount, _transactionForm.Currency);
+            if (success)
+            {
+                _successMessage = $"Successfully withdrew {_transactionForm.Amount:N2} {_transactionForm.Currency}.";
+                _activeForm = null;
+                _transactionForm = new() { Currency = "USD" };
+                await LoadAccount();
+            }
+            else
+            {
+                _error = "Withdrawal failed. You may have insufficient funds.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Withdrawal failed: {ex.Message}";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private async Task HandleTransfer()
+    {
+        _submitting = true;
+        _successMessage = null;
+        _error = null;
+        try
+        {
+            if (!Guid.TryParse(_transferForm.DestinationAccountId, out var destId))
+            {
+                _error = "Invalid destination account ID format.";
+                _submitting = false;
+                return;
+            }
+
+            var success = await Api.TransferAsync(AccountId, destId, _transferForm.Amount, _transferForm.Currency);
+            if (success)
+            {
+                _successMessage = $"Successfully transferred {_transferForm.Amount:N2} {_transferForm.Currency}.";
+                _activeForm = null;
+                _transferForm = new() { Currency = "USD" };
+                await LoadAccount();
+            }
+            else
+            {
+                _error = "Transfer failed. Please check the details and try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Transfer failed: {ex.Message}";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private async Task HandleCloseAccount()
+    {
+        _showCloseConfirm = false;
+        _submitting = true;
+        _error = null;
+        try
+        {
+            var success = await Api.CloseAccountAsync(AccountId);
+            if (success)
+            {
+                Navigation.NavigateTo("/", forceLoad: false);
+            }
+            else
+            {
+                _error = "Failed to close account. The account may still have funds.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"Failed to close account: {ex.Message}";
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private sealed class TransactionFormModel
+    {
+        public decimal Amount { get; set; }
+        public string Currency { get; set; } = "USD";
+    }
+
+    private sealed class TransferFormModel
+    {
+        public string DestinationAccountId { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string Currency { get; set; } = "USD";
+    }
+}
