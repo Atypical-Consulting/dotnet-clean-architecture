@@ -1,0 +1,41 @@
+namespace CleanArchitecture.UnitTests.Transfer;
+
+using System.Threading.Tasks;
+using CleanArchitecture.Application.UseCases.Transfer;
+using CleanArchitecture.Domain;
+using CleanArchitecture.Infrastructure.DataAccess;
+using Microsoft.Extensions.Logging.Abstractions;
+using Xunit;
+
+public sealed class TransferUseCaseTests : IClassFixture<StandardFixture>
+{
+    private readonly StandardFixture _fixture;
+
+    public TransferUseCaseTests(StandardFixture fixture) => this._fixture = fixture;
+
+    [Theory]
+    [ClassData(typeof(ValidDataSetup))]
+    public async Task TransferUseCase_Updates_Balance(
+        decimal amount,
+        decimal expectedOriginBalance)
+    {
+        TransferPresenter presenter = new TransferPresenter();
+        TransferUseCase sut = new TransferUseCase(
+            this._fixture.AccountRepositoryFake,
+            this._fixture.UnitOfWork,
+            this._fixture.EntityFactory,
+            this._fixture.CurrencyExchangeFake,
+            NullLogger<TransferUseCase>.Instance);
+
+        sut.SetOutputPort(presenter);
+
+        await sut.Execute(
+            SeedData.DefaultAccountId.Id,
+            SeedData.SecondAccountId.Id,
+            amount,
+            "USD");
+
+        Account? actual = presenter.OriginAccount!;
+        Assert.Equal(expectedOriginBalance, actual.GetCurrentBalance().Amount);
+    }
+}

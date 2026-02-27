@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>CleanArchitecture.WalletApp</RootNamespace>
+    <AssemblyName>CleanArchitecture.WalletApp</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <ContainerRegistry>ghcr.io/atypical-consulting</ContainerRegistry>
+    <ContainerImageName>wallet-app</ContainerImageName>
+    <ContainerImageTag>latest</ContainerImageTag>
+  </PropertyGroup>
+
+  <!-- Tailwind CSS Build Integration -->
+  <Target Name="TailwindBuild" BeforeTargets="Build">
+    <Exec Command="npx @tailwindcss/cli -i Styles/input.css -o wwwroot/css/app.css --minify" WorkingDirectory="$(MSBuildProjectDirectory)" Condition="Exists('$(MSBuildProjectDirectory)/node_modules')" />
+  </Target>
+
+  <Target Name="TailwindWatch" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+    <!-- In development, run: npx @tailwindcss/cli -i Styles/input.css -o wwwroot/css/app.css with watch flag -->
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="../CleanArchitecture.ServiceDefaults/CleanArchitecture.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>

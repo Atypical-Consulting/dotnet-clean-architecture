@@ -1,0 +1,108 @@
+namespace CleanArchitecture.IntegrationTests.EntityFrameworkTests;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using CleanArchitecture.Domain;
+using CleanArchitecture.Domain.Credits;
+using CleanArchitecture.Domain.ValueObjects;
+using CleanArchitecture.Infrastructure.DataAccess;
+using CleanArchitecture.Infrastructure.DataAccess.Repositories;
+using Xunit;
+
+public sealed class AccountRepositoryTests : IClassFixture<StandardFixture>
+{
+    private readonly StandardFixture _fixture;
+    public AccountRepositoryTests(StandardFixture fixture) => this._fixture = fixture;
+
+    [Fact]
+    public async Task Add()
+    {
+        AccountRepository accountRepository = new AccountRepository(this._fixture.Context);
+
+        Account account = new Account(
+            new AccountId(Guid.NewGuid()),
+            SeedData.DefaultExternalUserId,
+            Currency.Dollar
+        );
+
+        Credit credit = new Credit(
+            new CreditId(Guid.NewGuid()),
+            account.AccountId,
+            DateTime.UtcNow,
+            400,
+            "USD"
+        );
+
+        await accountRepository
+            .Add(account, credit)
+            ;
+
+        await this._fixture
+            .Context
+            .SaveChangesAsync()
+            ;
+
+        bool hasAnyAccount = this._fixture
+            .Context
+            .Accounts
+            .Any(e => e.AccountId == account.AccountId);
+
+        bool hasAnyCredit = this._fixture
+            .Context
+            .Credits
+            .Any(e => e.CreditId == credit.CreditId);
+
+        Assert.True(hasAnyAccount && hasAnyCredit);
+    }
+
+    [Fact]
+    public async Task Delete()
+    {
+        AccountRepository accountRepository = new AccountRepository(this._fixture.Context);
+
+        Account account = new Account(
+            new AccountId(Guid.NewGuid()),
+            SeedData.DefaultExternalUserId,
+            Currency.Dollar
+        );
+
+        Credit credit = new Credit(
+            new CreditId(Guid.NewGuid()),
+            account.AccountId,
+            DateTime.UtcNow,
+            400,
+            "USD"
+        );
+
+        await accountRepository
+            .Add(account, credit)
+            ;
+
+        await this._fixture
+            .Context
+            .SaveChangesAsync()
+            ;
+
+        await accountRepository
+            .Delete(account.AccountId)
+            ;
+
+        await this._fixture
+            .Context
+            .SaveChangesAsync()
+            ;
+
+        bool hasAnyAccount = this._fixture
+            .Context
+            .Accounts
+            .Any(e => e.AccountId == account.AccountId);
+
+        bool hasAnyCredit = this._fixture
+            .Context
+            .Credits
+            .Any(e => e.CreditId == credit.CreditId);
+
+        Assert.False(hasAnyAccount && hasAnyCredit);
+    }
+}

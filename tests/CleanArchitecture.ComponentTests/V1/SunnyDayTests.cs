@@ -1,0 +1,127 @@
+namespace CleanArchitecture.ComponentTests.V1;
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Net.Http;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Xunit;
+
+public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
+{
+    private readonly CustomWebApplicationFactory _factory;
+    public SunnyDayTests(CustomWebApplicationFactory factory) => this._factory = factory;
+
+    private async Task<Tuple<Guid, decimal>> GetAccounts()
+    {
+        HttpClient client = this._factory.CreateClient();
+        HttpResponseMessage actualResponse = await client
+            .GetAsync("/api/v1/Accounts/")
+            ;
+
+        string actualResponseString = await actualResponse.Content
+            .ReadAsStringAsync()
+            ;
+
+        using JsonDocument jsonDocument = JsonDocument.Parse(actualResponseString);
+        JsonElement jsonResponse = jsonDocument.RootElement;
+
+        Guid.TryParse(jsonResponse.GetProperty("accounts")[0].GetProperty("accountId").GetString(), out Guid accountId);
+        decimal.TryParse(jsonResponse.GetProperty("accounts")[0].GetProperty("currentBalance").GetRawText(),
+            out decimal currentBalance);
+
+        return new Tuple<Guid, decimal>(accountId, currentBalance);
+    }
+
+    private async Task<Tuple<Guid, decimal>> GetAccount(string accountId)
+    {
+        HttpClient client = this._factory.CreateClient();
+        string actualResponseString = await client
+            .GetStringAsync($"/api/v1/Accounts/{accountId}")
+            ;
+
+        using JsonDocument jsonDocument = JsonDocument.Parse(actualResponseString);
+        JsonElement jsonResponse = jsonDocument.RootElement;
+
+        Guid.TryParse(jsonResponse.GetProperty("account").GetProperty("accountId").GetString(), out Guid getAccountId);
+        decimal.TryParse(jsonResponse.GetProperty("account").GetProperty("currentBalance").GetRawText(), out decimal currentBalance);
+
+        return new Tuple<Guid, decimal>(getAccountId, currentBalance);
+    }
+
+    private async Task Deposit(string account, decimal amount)
+    {
+        HttpClient client = this._factory.CreateClient();
+        FormUrlEncodedContent content = new FormUrlEncodedContent(new[]
+        {
+                new KeyValuePair<string, string>("amount", amount.ToString(CultureInfo.InvariantCulture)),
+                new KeyValuePair<string, string>("currency", "USD")
+            });
+
+        HttpResponseMessage response = await client.PatchAsync($"api/v1/Transactions/{account}/Deposit", content)
+            ;
+
+        string result = await response.Content
+            .ReadAsStringAsync()
+            ;
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task Withdraw(string account, decimal amount)
+    {
+        HttpClient client = this._factory.CreateClient();
+
+        FormUrlEncodedContent content = new FormUrlEncodedContent(new[]
+        {
+                new KeyValuePair<string, string>("amount", amount.ToString(CultureInfo.InvariantCulture)),
+                new KeyValuePair<string, string>("currency", "USD")
+            });
+
+        HttpResponseMessage response = await client.PatchAsync($"api/v1/Transactions/{account}/Withdraw", content)
+            ;
+
+        string responseBody = await response.Content
+            .ReadAsStringAsync()
+            ;
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    private async Task Close(string account)
+    {
+        HttpClient client = this._factory.CreateClient();
+        HttpResponseMessage response = await client.DeleteAsync($"api/v1/Accounts/{account}")
+            ;
+
+        string responseBody = await response.Content
+            .ReadAsStringAsync()
+            ;
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task GetAccount_Withdraw_Deposit_Withdraw_Withdraw_Close()
+    {
+        Tuple<Guid, decimal> account = await this.GetAccounts()
+            ;
+        await this.GetAccount(account.Item1.ToString())
+            ;
+        await this.Withdraw(account.Item1.ToString(), account.Item2)
+            ;
+        await this.Deposit(account.Item1.ToString(), 500)
+            ;
+        await this.Deposit(account.Item1.ToString(), 300)
+            ;
+        await this.Withdraw(account.Item1.ToString(), 400)
+            ;
+        await this.Withdraw(account.Item1.ToString(), 400)
+            ;
+        account = await this.GetAccounts()
+            ;
+        await this.Close(account.Item1.ToString())
+            ;
+    }
+}
