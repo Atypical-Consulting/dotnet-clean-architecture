@@ -36,7 +36,7 @@ public sealed class ContextFactory : IDesignTimeDbContextFactory<MangaContext>
 
     private static string ReadDefaultConnectionStringFromAppSettings()
     {
-        string envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        string envName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
         IConfigurationRoot configuration = new ConfigurationBuilder()
             .SetBasePath(Path.Combine(Directory.GetCurrentDirectory()))
@@ -45,7 +45,8 @@ public sealed class ContextFactory : IDesignTimeDbContextFactory<MangaContext>
             .AddEnvironmentVariables()
             .Build();
 
-        string connectionString = configuration.GetValue<string>("PersistenceModule:DefaultConnection");
+        string connectionString = configuration.GetValue<string>("PersistenceModule:DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'PersistenceModule:DefaultConnection' not found.");
         return connectionString;
     }
 }
