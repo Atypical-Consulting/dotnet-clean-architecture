@@ -31,6 +31,8 @@ public static class CurrencyExchangeExtensions
 
         if (isEnabled)
         {
+            services.Configure<CurrencyExchangeOptions>(
+                configuration.GetSection(CurrencyExchangeOptions.SectionName));
             services.AddHttpClient(CurrencyExchangeService.HttpClientName);
             services.AddScoped<ICurrencyExchange, CurrencyExchangeService>();
         }
