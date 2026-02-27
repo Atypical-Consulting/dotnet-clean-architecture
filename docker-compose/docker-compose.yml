@@ -24,7 +24,7 @@ services:
       - ASPNETCORE_BASEPATH=/accounts-api
       - ASPNETCORE_Kestrel__Certificates__Default__Password=MyCertificatePassword
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
-      - PersistenceModule__DefaultConnection=Server=sql1;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts;
+      - PersistenceModule__DefaultConnection=Server=sql1;User Id=sa;Password=${SA_PASSWORD:-YourStrong!Passw0rd};Database=Accounts;
     volumes:
       - ../.docker/https:/https:ro
     depends_on:
@@ -37,7 +37,7 @@ services:
       context: ../accounts-api/
       dockerfile: ../accounts-api-seed/Dockerfile
     environment:
-      - PersistenceModule__DefaultConnection=Server=sql1;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts;
+      - PersistenceModule__DefaultConnection=Server=sql1;User Id=sa;Password=${SA_PASSWORD:-YourStrong!Passw0rd};Database=Accounts;
     command: bash -c "/root/.dotnet/tools/dotnet-ef database update --project src/Infrastructure --startup-project src/WebApi"
     depends_on:
       - sql1
@@ -65,7 +65,7 @@ services:
   sql1:
     image: "mcr.microsoft.com/mssql/server:2019-latest"
     environment:
-      SA_PASSWORD: "<YourStrong!Passw0rd>"
+      SA_PASSWORD: "${SA_PASSWORD:-YourStrong!Passw0rd}"
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"

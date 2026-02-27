@@ -41,9 +41,28 @@ Then the following containers should be running on `docker ps`:
 | Wallet SPA 	      | https://wallet.local:8081                                                     |
 | Accounts API 	      | https://wallet.local:8081/accounts-api                                        |
 | Identity Server 	  | https://wallet.local:8081/identity-server	                                  |
-| SQL Server 	      | Server=localhost;User Id=sa;Password=<YourStrong!Passw0rd>;Database=Accounts; |
+| SQL Server 	      | Server=localhost;User Id=sa;Password=***;Database=Accounts; |
 
 Browse to [https://wallet.local:8081](https://wallet.local:8081) then click on Log In. If asked trust the [self-signed certificate](https://stackoverflow.com/questions/21397809/create-a-trusted-self-signed-ssl-cert-for-localhost-for-use-with-express-node).
+
+## Configuring Secrets
+
+**Never commit real credentials to the repository.**
+
+### Docker Compose (.env)
+
+Copy the example environment file and fill in your values:
+
+```sh
+cp .env.example .env
+# Edit .env with your actual secrets (SA_PASSWORD, Google OAuth, etc.)
+```
+
+The `.env` file is gitignored and will be picked up automatically by `docker-compose`. The `docker-compose.yml` references these variables with sensible defaults (e.g. `${SA_PASSWORD:-YourStrong!Passw0rd}`).
+
+### GitHub Actions
+
+For CI/CD, store secrets in **GitHub repository secrets** and reference them in workflow files as `${{ secrets.SECRET_NAME }}`.
 
 ## Motivation
 

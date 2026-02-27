@@ -287,3 +287,18 @@ __pycache__/
 *.odx.cs
 *.xsd.cs
 .DS_Store
+
+# Secrets and sensitive files
+.env
+appsettings.Local.json
+
+# Data Protection XML keys
+key-*.xml
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+
+# nginx SSL directory
+nginx/ssl/
