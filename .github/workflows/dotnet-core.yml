@@ -5,18 +5,18 @@ on: [push]
 jobs:
   build_docker_image:
     env:
-      PersistenceModule__DefaultConnection: Host=localhost;Port=5432;Database=Accounts;Username=postgres;Password=postgres
+      PersistenceModule__DefaultConnection: Host=localhost;Port=5432;Database=Accounts;Username=postgres;Password=YourStrong!Passw0rd
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:17
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: YourStrong!Passw0rd
           POSTGRES_DB: Accounts
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
