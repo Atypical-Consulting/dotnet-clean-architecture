@@ -3,17 +3,11 @@
 
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using IdentityModel;
 using Microsoft.AspNetCore.Authentication;
-using Newtonsoft.Json;
 
 namespace IdentityServer.Quickstart.Diagnostics;
-
-using System.Collections.Generic;
-using System.Text;
-using IdentityModel;
-using Microsoft.AspNetCore.Authentication;
-using Newtonsoft.Json;
 
 public class DiagnosticsViewModel
 {
@@ -27,7 +21,7 @@ public class DiagnosticsViewModel
             var bytes = Base64Url.Decode(encoded);
             var value = Encoding.UTF8.GetString(bytes);
 
-            Clients = JsonConvert.DeserializeObject<string[]>(value);
+            Clients = JsonSerializer.Deserialize<string[]>(value);
         }
     }
 

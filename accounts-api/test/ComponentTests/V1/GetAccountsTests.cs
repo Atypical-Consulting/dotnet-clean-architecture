@@ -1,12 +1,10 @@
 namespace ComponentTests.V1;
 
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 [Collection("WebApi Collection")]
@@ -32,16 +30,17 @@ public sealed class GetAccountsTests
 
         Assert.Equal(HttpStatusCode.OK, actualResponse.StatusCode);
 
-        using StringReader stringReader = new StringReader(actualResponseString);
-        using JsonTextReader reader = new JsonTextReader(stringReader) { DateParseHandling = DateParseHandling.None };
-        JObject jsonResponse = await JObject.LoadAsync(reader)
-            ;
+        using JsonDocument jsonDocument = JsonDocument.Parse(actualResponseString);
+        JsonElement jsonResponse = jsonDocument.RootElement;
 
-        Assert.Equal(JTokenType.String, jsonResponse["accounts"]![0]!["accountId"]!.Type);
-        Assert.Equal(JTokenType.Integer, jsonResponse["accounts"]![0]!["currentBalance"]!.Type);
+        JsonElement accountIdElement = jsonResponse.GetProperty("accounts")[0].GetProperty("accountId");
+        JsonElement currentBalanceElement = jsonResponse.GetProperty("accounts")[0].GetProperty("currentBalance");
 
-        Assert.True(Guid.TryParse(jsonResponse["accounts"]![0]!["accountId"]!.Value<string>(), out Guid _));
-        Assert.True(decimal.TryParse(jsonResponse["accounts"]![0]!["currentBalance"]!.Value<string>(),
+        Assert.Equal(JsonValueKind.String, accountIdElement.ValueKind);
+        Assert.Equal(JsonValueKind.Number, currentBalanceElement.ValueKind);
+
+        Assert.True(Guid.TryParse(accountIdElement.GetString(), out Guid _));
+        Assert.True(decimal.TryParse(currentBalanceElement.GetRawText(),
             out decimal _));
     }
 }

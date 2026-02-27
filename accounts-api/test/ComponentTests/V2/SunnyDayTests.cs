@@ -1,11 +1,9 @@
 namespace ComponentTests.V2;
 
 using System;
-using System.IO;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Xunit;
 
 public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
@@ -24,14 +22,11 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
             .ReadAsStringAsync()
             ;
 
-        using StringReader stringReader = new StringReader(actualResponseString);
-        using JsonTextReader reader = new JsonTextReader(stringReader) { DateParseHandling = DateParseHandling.None };
+        using JsonDocument jsonDocument = JsonDocument.Parse(actualResponseString);
+        JsonElement jsonResponse = jsonDocument.RootElement;
 
-        JObject jsonResponse = await JObject.LoadAsync(reader)
-            ;
-
-        Guid.TryParse(jsonResponse["accounts"]![0]!["accountId"]!.Value<string>(), out Guid accountId);
-        decimal.TryParse(jsonResponse["accounts"]![0]!["currentBalance"]!.Value<string>(),
+        Guid.TryParse(jsonResponse.GetProperty("accounts")[0].GetProperty("accountId").GetString(), out Guid accountId);
+        decimal.TryParse(jsonResponse.GetProperty("accounts")[0].GetProperty("currentBalance").GetRawText(),
             out decimal currentBalance);
 
         return new Tuple<Guid, decimal>(accountId, currentBalance);
