@@ -302,3 +302,6 @@ key-*.xml
 
 # nginx SSL directory
 nginx/ssl/
+
+# Aspire generated manifests
+k8s/generated/
