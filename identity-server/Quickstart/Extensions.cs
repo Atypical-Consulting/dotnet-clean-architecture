@@ -1,12 +1,12 @@
 using System;
 using IdentityServer.Quickstart.Account;
-using IdentityServer4.Models;
+using Duende.IdentityServer.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace IdentityServer.Quickstart;
 
 using System;
-using IdentityServer4.Models;
+using Duende.IdentityServer.Models;
 using Microsoft.AspNetCore.Mvc;
 
 public static class Extensions

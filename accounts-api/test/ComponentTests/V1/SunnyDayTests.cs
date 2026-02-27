@@ -20,17 +20,17 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
         HttpClient client = this._factory.CreateClient();
         HttpResponseMessage actualResponse = await client
             .GetAsync("/api/v1/Accounts/")
-            .ConfigureAwait(false);
+            ;
 
         string actualResponseString = await actualResponse.Content
             .ReadAsStringAsync()
-            .ConfigureAwait(false);
+            ;
 
         using StringReader stringReader = new StringReader(actualResponseString);
         using JsonTextReader reader = new JsonTextReader(stringReader) { DateParseHandling = DateParseHandling.None };
 
         JObject jsonResponse = await JObject.LoadAsync(reader)
-            .ConfigureAwait(false);
+            ;
 
         Guid.TryParse(jsonResponse["accounts"]![0]!["accountId"]!.Value<string>(), out Guid accountId);
         decimal.TryParse(jsonResponse["accounts"]![0]!["currentBalance"]!.Value<string>(),
@@ -44,13 +44,13 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
         HttpClient client = this._factory.CreateClient();
         string actualResponseString = await client
             .GetStringAsync($"/api/v1/Accounts/{accountId}")
-            .ConfigureAwait(false);
+            ;
 
         using StringReader stringReader = new StringReader(actualResponseString);
         using JsonTextReader reader = new JsonTextReader(stringReader) { DateParseHandling = DateParseHandling.None };
 
         JObject jsonResponse = await JObject.LoadAsync(reader)
-            .ConfigureAwait(false);
+            ;
 
         Guid.TryParse(jsonResponse["account"]!["accountId"]!.Value<string>(), out Guid getAccountId);
         decimal.TryParse(jsonResponse["account"]!["currentBalance"]!.Value<string>(), out decimal currentBalance);
@@ -68,11 +68,11 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
             });
 
         HttpResponseMessage response = await client.PatchAsync($"api/v1/Transactions/{account}/Deposit", content)
-            .ConfigureAwait(false);
+            ;
 
         string result = await response.Content
             .ReadAsStringAsync()
-            .ConfigureAwait(false);
+            ;
 
         response.EnsureSuccessStatusCode();
     }
@@ -88,11 +88,11 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
             });
 
         HttpResponseMessage response = await client.PatchAsync($"api/v1/Transactions/{account}/Withdraw", content)
-            .ConfigureAwait(false);
+            ;
 
         string responseBody = await response.Content
             .ReadAsStringAsync()
-            .ConfigureAwait(false);
+            ;
 
         response.EnsureSuccessStatusCode();
     }
@@ -101,11 +101,11 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
     {
         HttpClient client = this._factory.CreateClient();
         HttpResponseMessage response = await client.DeleteAsync($"api/v1/Accounts/{account}")
-            .ConfigureAwait(false);
+            ;
 
         string responseBody = await response.Content
             .ReadAsStringAsync()
-            .ConfigureAwait(false);
+            ;
 
         response.EnsureSuccessStatusCode();
     }
@@ -114,22 +114,22 @@ public sealed class SunnyDayTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetAccount_Withdraw_Deposit_Withdraw_Withdraw_Close()
     {
         Tuple<Guid, decimal> account = await this.GetAccounts()
-            .ConfigureAwait(false);
+            ;
         await this.GetAccount(account.Item1.ToString())
-            .ConfigureAwait(false);
+            ;
         await this.Withdraw(account.Item1.ToString(), account.Item2)
-            .ConfigureAwait(false);
+            ;
         await this.Deposit(account.Item1.ToString(), 500)
-            .ConfigureAwait(false);
+            ;
         await this.Deposit(account.Item1.ToString(), 300)
-            .ConfigureAwait(false);
+            ;
         await this.Withdraw(account.Item1.ToString(), 400)
-            .ConfigureAwait(false);
+            ;
         await this.Withdraw(account.Item1.ToString(), 400)
-            .ConfigureAwait(false);
+            ;
         account = await this.GetAccounts()
-            .ConfigureAwait(false);
+            ;
         await this.Close(account.Item1.ToString())
-            .ConfigureAwait(false);
+            ;
     }
 }

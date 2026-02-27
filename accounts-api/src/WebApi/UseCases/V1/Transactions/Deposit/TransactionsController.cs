@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement.Mvc;
+using Asp.Versioning;
 using Modules.Common;
 using Modules.Common.FeatureFlags;
 using ViewModels;

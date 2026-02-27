@@ -4,6 +4,7 @@ using Application.Services;
 using FeatureFlags;
 using Infrastructure.ExternalAuthentication;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,16 +38,15 @@ public static class AuthenticationExtensions
 
             services
                 .AddAuthentication("Bearer")
-                .AddIdentityServerAuthentication("Bearer", options =>
+                .AddJwtBearer("Bearer", options =>
                 {
                         // set the Identity.API service as the authority on authentication/authorization
                         options.Authority = configuration["AuthenticationModule:AuthorityUrl"];
-                    options.ApiName = "api1";
 
                     options.RequireHttpsMetadata = false;
 
-                        // set the name of the API that's talking to the Identity API
-                    });
+                    options.Audience = "api1";
+                });
         }
         else
         {

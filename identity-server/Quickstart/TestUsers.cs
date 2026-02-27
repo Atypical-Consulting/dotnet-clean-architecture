@@ -5,8 +5,8 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text.Json;
 using IdentityModel;
-using IdentityServer4;
-using IdentityServer4.Test;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Test;
 
 namespace IdentityServer.Quickstart;
 
@@ -14,8 +14,8 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text.Json;
 using IdentityModel;
-using IdentityServer4;
-using IdentityServer4.Test;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Test;
 
 public class TestUsers
 {

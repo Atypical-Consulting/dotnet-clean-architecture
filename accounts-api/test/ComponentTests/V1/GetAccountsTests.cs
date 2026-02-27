@@ -24,18 +24,18 @@ public sealed class GetAccountsTests
 
         HttpResponseMessage actualResponse = await client
             .GetAsync("/api/v1/Accounts/")
-            .ConfigureAwait(false);
+            ;
 
         string actualResponseString = await actualResponse.Content
             .ReadAsStringAsync()
-            .ConfigureAwait(false);
+            ;
 
         Assert.Equal(HttpStatusCode.OK, actualResponse.StatusCode);
 
         using StringReader stringReader = new StringReader(actualResponseString);
         using JsonTextReader reader = new JsonTextReader(stringReader) { DateParseHandling = DateParseHandling.None };
         JObject jsonResponse = await JObject.LoadAsync(reader)
-            .ConfigureAwait(false);
+            ;
 
         Assert.Equal(JTokenType.String, jsonResponse["accounts"]![0]!["accountId"]!.Type);
         Assert.Equal(JTokenType.Integer, jsonResponse["accounts"]![0]!["currentBalance"]!.Type);
