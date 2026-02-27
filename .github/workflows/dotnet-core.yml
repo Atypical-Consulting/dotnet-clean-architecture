@@ -54,11 +54,11 @@ jobs:
       matrix:
         include:
           - name: accounts-api
-            dockerfile: accounts-api/src/WebApi/Dockerfile
-            context: accounts-api
+            dockerfile: src/CleanArchitecture.WebApi/Dockerfile
+            context: .
           - name: wallet-app
-            dockerfile: accounts-api/src/WalletApp/Dockerfile
-            context: accounts-api
+            dockerfile: src/CleanArchitecture.WalletApp/Dockerfile
+            context: .
     steps:
       - uses: actions/checkout@v4
 
