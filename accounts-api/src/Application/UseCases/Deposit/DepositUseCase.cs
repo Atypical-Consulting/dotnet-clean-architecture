@@ -72,7 +72,7 @@ public sealed class DepositUseCase : IDepositUseCase
                     .ConfigureAwait(false);
 
             Credit credit = this._accountFactory
-                .NewCredit(depositAccount, convertedAmount, DateTime.Now);
+                .NewCredit(depositAccount, convertedAmount, DateTime.UtcNow);
 
             await this.Deposit(depositAccount, credit)
                 .ConfigureAwait(false);

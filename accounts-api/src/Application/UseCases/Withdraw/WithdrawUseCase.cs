@@ -79,7 +79,7 @@ public sealed class WithdrawUseCase : IWithdrawUseCase
                     .ConfigureAwait(false);
 
             Debit debit = this._accountFactory
-                .NewDebit(withdrawAccount, localCurrencyAmount, DateTime.Now);
+                .NewDebit(withdrawAccount, localCurrencyAmount, DateTime.UtcNow);
 
             if (withdrawAccount.GetCurrentBalance().Subtract(debit.Amount).Amount < 0)
             {

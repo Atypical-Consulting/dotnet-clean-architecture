@@ -22,14 +22,14 @@ public sealed class MangaContextFake
         Credit credit = new Credit(
             new CreditId(Guid.NewGuid()),
             SeedData.DefaultAccountId,
-            DateTime.Now,
+            DateTime.UtcNow,
             800,
             Currency.Dollar.Code);
 
         Debit debit = new Debit(
             new DebitId(Guid.NewGuid()),
             SeedData.DefaultAccountId,
-            DateTime.Now,
+            DateTime.UtcNow,
             300,
             Currency.Dollar.Code);
 
