@@ -6,6 +6,7 @@ using Application.UseCases.Deposit;
 using Domain.Credits;
 using Domain.ValueObjects;
 using Infrastructure.DataAccess;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 public sealed class DepositTests : IClassFixture<StandardFixture>
@@ -23,7 +24,8 @@ public sealed class DepositTests : IClassFixture<StandardFixture>
             this._fixture.AccountRepositoryFake,
             this._fixture.UnitOfWork,
             this._fixture.EntityFactory,
-            this._fixture.CurrencyExchangeFake);
+            this._fixture.CurrencyExchangeFake,
+            NullLogger<DepositUseCase>.Instance);
 
         sut.SetOutputPort(presenter);
 
@@ -47,7 +49,8 @@ public sealed class DepositTests : IClassFixture<StandardFixture>
             this._fixture.AccountRepositoryFake,
             this._fixture.UnitOfWork,
             this._fixture.EntityFactory,
-            this._fixture.CurrencyExchangeFake);
+            this._fixture.CurrencyExchangeFake,
+            NullLogger<DepositUseCase>.Instance);
 
         DepositValidationUseCase sut = new DepositValidationUseCase(
             depositUseCase, notification);

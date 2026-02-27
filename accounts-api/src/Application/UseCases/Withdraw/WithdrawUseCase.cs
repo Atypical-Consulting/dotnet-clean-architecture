@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Domain;
 using Domain.Debits;
 using Domain.ValueObjects;
+using Microsoft.Extensions.Logging;
 using Services;
 
 /// <inheritdoc />
@@ -17,6 +18,7 @@ public sealed class WithdrawUseCase : IWithdrawUseCase
     private readonly IAccountFactory _accountFactory;
     private readonly IAccountRepository _accountRepository;
     private readonly ICurrencyExchange _currencyExchange;
+    private readonly ILogger<WithdrawUseCase> _logger;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserService _userService;
     private IOutputPort _outputPort;
@@ -29,18 +31,21 @@ public sealed class WithdrawUseCase : IWithdrawUseCase
     /// <param name="accountFactory"></param>
     /// <param name="userService"></param>
     /// <param name="currencyExchange"></param>
+    /// <param name="logger"></param>
     public WithdrawUseCase(
         IAccountRepository accountRepository,
         IUnitOfWork unitOfWork,
         IAccountFactory accountFactory,
         IUserService userService,
-        ICurrencyExchange currencyExchange)
+        ICurrencyExchange currencyExchange,
+        ILogger<WithdrawUseCase> logger)
     {
         this._accountRepository = accountRepository;
         this._unitOfWork = unitOfWork;
         this._accountFactory = accountFactory;
         this._userService = userService;
         this._currencyExchange = currencyExchange;
+        this._logger = logger;
         this._outputPort = new WithdrawPresenter();
     }
 
@@ -58,6 +63,10 @@ public sealed class WithdrawUseCase : IWithdrawUseCase
         string externalUserId = this._userService
             .GetCurrentUserId();
 
+        this._logger.LogInformation(
+            "Processing withdrawal of {Amount} {Currency} from account {AccountId} for user {UserId}",
+            withdrawAmount.Amount, withdrawAmount.Currency, accountId, externalUserId);
+
         IAccount account = await this._accountRepository
             .Find(accountId, externalUserId)
             .ConfigureAwait(false);
@@ -74,6 +83,9 @@ public sealed class WithdrawUseCase : IWithdrawUseCase
 
             if (withdrawAccount.GetCurrentBalance().Subtract(debit.Amount).Amount < 0)
             {
+                this._logger.LogWarning(
+                    "Withdrawal denied: insufficient funds in account {AccountId}",
+                    accountId);
                 this._outputPort?.OutOfFunds();
                 return;
             }
@@ -81,10 +93,15 @@ public sealed class WithdrawUseCase : IWithdrawUseCase
             await this.Withdraw(withdrawAccount, debit)
                 .ConfigureAwait(false);
 
+            this._logger.LogInformation(
+                "Withdrawal of {Amount} {Currency} completed for account {AccountId}",
+                localCurrencyAmount.Amount, localCurrencyAmount.Currency, accountId);
+
             this._outputPort.Ok(debit, withdrawAccount);
             return;
         }
 
+        this._logger.LogWarning("Withdrawal failed: account {AccountId} not found", accountId);
         this._outputPort.NotFound();
     }
 

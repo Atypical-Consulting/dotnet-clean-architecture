@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Modules.Common;
 using OpenTelemetry.Metrics;
+using Serilog;
 
 /// <summary>
 ///     Program entry point.
@@ -19,6 +20,15 @@ public static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // Configure Serilog from appsettings and enrich with trace context
+        builder.Host.UseSerilog((context, services, configuration) => configuration
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext()
+            .Enrich.WithMachineName()
+            .Enrich.WithEnvironmentName()
+            .Enrich.With<ActivityEnricher>());
+
         // Add Aspire service defaults (OpenTelemetry, health checks, service discovery, resilience)
         builder.AddServiceDefaults();
 
@@ -32,6 +42,21 @@ public static class Program
         startup.ConfigureServices(builder.Services);
 
         var app = builder.Build();
+
+        // Add Serilog request logging middleware for structured HTTP request logs
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+            {
+                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+                diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+
+                if (httpContext.User.Identity?.IsAuthenticated == true)
+                {
+                    diagnosticContext.Set("UserId", httpContext.User.Identity.Name);
+                }
+            };
+        });
 
         // Configure the HTTP request pipeline via the existing Startup class
         startup.Configure(app, app.Environment);

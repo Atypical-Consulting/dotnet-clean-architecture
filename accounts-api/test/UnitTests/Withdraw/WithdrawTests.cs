@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Application.UseCases.Withdraw;
 using Domain;
 using Infrastructure.DataAccess;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 public sealed class WithdrawTests : IClassFixture<StandardFixture>
@@ -24,7 +25,8 @@ public sealed class WithdrawTests : IClassFixture<StandardFixture>
             this._fixture.UnitOfWork,
             this._fixture.EntityFactory,
             this._fixture.TestUserService,
-            this._fixture.CurrencyExchangeFake);
+            this._fixture.CurrencyExchangeFake,
+            NullLogger<WithdrawUseCase>.Instance);
 
         sut.SetOutputPort(presenter);
 

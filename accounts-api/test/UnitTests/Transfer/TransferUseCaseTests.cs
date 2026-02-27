@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Application.UseCases.Transfer;
 using Domain;
 using Infrastructure.DataAccess;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 public sealed class TransferUseCaseTests : IClassFixture<StandardFixture>
@@ -23,7 +24,8 @@ public sealed class TransferUseCaseTests : IClassFixture<StandardFixture>
             this._fixture.AccountRepositoryFake,
             this._fixture.UnitOfWork,
             this._fixture.EntityFactory,
-            this._fixture.CurrencyExchangeFake);
+            this._fixture.CurrencyExchangeFake,
+            NullLogger<TransferUseCase>.Instance);
 
         sut.SetOutputPort(presenter);
 
