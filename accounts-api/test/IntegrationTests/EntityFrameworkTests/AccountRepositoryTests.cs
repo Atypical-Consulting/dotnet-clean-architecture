@@ -29,7 +29,7 @@ public sealed class AccountRepositoryTests : IClassFixture<StandardFixture>
         Credit credit = new Credit(
             new CreditId(Guid.NewGuid()),
             account.AccountId,
-            DateTime.Now,
+            DateTime.UtcNow,
             400,
             "USD"
         );
@@ -70,7 +70,7 @@ public sealed class AccountRepositoryTests : IClassFixture<StandardFixture>
         Credit credit = new Credit(
             new CreditId(Guid.NewGuid()),
             account.AccountId,
-            DateTime.Now,
+            DateTime.UtcNow,
             400,
             "USD"
         );

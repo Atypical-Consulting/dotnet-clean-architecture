@@ -79,7 +79,7 @@ public sealed class TransferUseCase : ITransferUseCase
                     .ConfigureAwait(false);
 
             Debit debit = this._accountFactory
-                .NewDebit(withdrawAccount, localCurrencyAmount, DateTime.Now);
+                .NewDebit(withdrawAccount, localCurrencyAmount, DateTime.UtcNow);
 
             if (withdrawAccount.GetCurrentBalance().Subtract(debit.Amount).Amount < 0)
             {
@@ -99,7 +99,7 @@ public sealed class TransferUseCase : ITransferUseCase
                     .ConfigureAwait(false);
 
             Credit credit = this._accountFactory
-                .NewCredit(depositAccount, destinationCurrencyAmount, DateTime.Now);
+                .NewCredit(depositAccount, destinationCurrencyAmount, DateTime.UtcNow);
 
             await this.Deposit(depositAccount, credit)
                 .ConfigureAwait(false);

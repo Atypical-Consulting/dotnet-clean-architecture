@@ -27,7 +27,7 @@ public sealed class CloseAccountTests : IClassFixture<StandardFixture>
 
         Credit credit = this._fixture
             .EntityFactory
-            .NewCredit(account, new Money(amount, Currency.Dollar), DateTime.Now);
+            .NewCredit(account, new Money(amount, Currency.Dollar), DateTime.UtcNow);
 
         account.Deposit(credit);
 

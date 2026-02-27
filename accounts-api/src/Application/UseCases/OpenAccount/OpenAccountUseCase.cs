@@ -57,7 +57,7 @@ public sealed class OpenAccountUseCase : IOpenAccountUseCase
             .NewAccount(externalUserId, amountToDeposit.Currency);
 
         Credit credit = this._accountFactory
-            .NewCredit(account, amountToDeposit, DateTime.Now);
+            .NewCredit(account, amountToDeposit, DateTime.UtcNow);
 
         await this.Deposit(account, credit)
             .ConfigureAwait(false);
