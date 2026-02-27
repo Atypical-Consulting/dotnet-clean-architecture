@@ -16,4 +16,8 @@
     <!-- In development, run: npx @tailwindcss/cli -i Styles/input.css -o wwwroot/css/app.css with watch flag -->
   </Target>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
+  </ItemGroup>
+
 </Project>
