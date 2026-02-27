@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Application.Services;
 using Domain.ValueObjects;
-using Newtonsoft.Json.Linq;
 
 /// <summary>
 ///     Real implementation of the Exchange Service using external data source
@@ -57,12 +57,13 @@ public sealed class CurrencyExchangeService : ICurrencyExchange
 
     private void ParseCurrencies(string responseJson)
     {
-        JObject rates = JObject.Parse(responseJson);
-        decimal eur = rates["rates"]![Currency.Euro.Code]!.Value<decimal>();
-        decimal cad = rates["rates"]![Currency.Canadian.Code]!.Value<decimal>();
-        decimal gbh = rates["rates"]![Currency.BritishPound.Code]!.Value<decimal>();
-        decimal sek = rates["rates"]![Currency.Krona.Code]!.Value<decimal>();
-        decimal brl = rates["rates"]![Currency.Real.Code]!.Value<decimal>();
+        using JsonDocument document = JsonDocument.Parse(responseJson);
+        JsonElement rates = document.RootElement.GetProperty("rates");
+        decimal eur = rates.GetProperty(Currency.Euro.Code).GetDecimal();
+        decimal cad = rates.GetProperty(Currency.Canadian.Code).GetDecimal();
+        decimal gbh = rates.GetProperty(Currency.BritishPound.Code).GetDecimal();
+        decimal sek = rates.GetProperty(Currency.Krona.Code).GetDecimal();
+        decimal brl = rates.GetProperty(Currency.Real.Code).GetDecimal();
 
         this._usdRates.Add(Currency.Dollar, 1);
         this._usdRates.Add(Currency.Euro, eur);
