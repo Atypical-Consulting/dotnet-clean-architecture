@@ -22,21 +22,6 @@ jobs:
   # ─────────────────────────────────────────────
   build-and-test:
     runs-on: ubuntu-latest
-    env:
-      PersistenceModule__DefaultConnection: Host=localhost;Port=5432;Database=Accounts;Username=postgres;Password=YourStrong!Passw0rd
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_PASSWORD: YourStrong!Passw0rd
-          POSTGRES_DB: Accounts
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -54,13 +39,6 @@ jobs:
 
       - name: Build
         run: dotnet build --configuration Release
-
-      - name: Run database migrations
-        run: |
-          dotnet tool update --global dotnet-ef
-          pushd accounts-api
-          dotnet ef database update --project src/Infrastructure --startup-project src/WebApi
-          popd
 
       - name: Test
         run: dotnet test --configuration Release --no-build
@@ -99,6 +77,7 @@ jobs:
           tags: |
             type=sha,prefix=
             type=ref,event=branch
+            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest,enable={{is_default_branch}}
