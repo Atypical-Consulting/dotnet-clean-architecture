@@ -19,7 +19,6 @@ services:
     depends_on:
       - sql1
       - accounts-api-seed
-      - identity-server
     ports:
       - "5001:5001"
   accounts-api-seed:
@@ -32,25 +31,6 @@ services:
     command: bash -c "/root/.dotnet/tools/dotnet-ef database update --project src/Infrastructure --startup-project src/WebApi"
     depends_on:
       - sql1
-  identity-server:
-    image: ${DOCKER_REGISTRY-}identityserver
-    container_name: "identity-server"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=https://*:5000
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=MyCertificatePassword
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/localhost.pfx
-      - IDENTITY_SERVER_ORIGIN=https://localhost:5000
-      - RedirectUris=https://localhost:5002/signin-oidc
-      - PostLogoutRedirectUris=https://localhost:5002
-      - AllowedCorsOrigins=https://localhost:5002
-    volumes:
-      - ../.docker/https:/https:ro
-    build:
-      context: ../
-      dockerfile: identity-server/Dockerfile
-    ports:
-      - "5000:5000"
   sql1:
     image: "mcr.microsoft.com/mssql/server:2019-latest"
     environment:
