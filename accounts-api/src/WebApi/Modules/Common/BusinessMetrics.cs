@@ -58,28 +58,28 @@ public sealed class BusinessMetrics
     /// <summary>Records a deposit transaction.</summary>
     public void RecordDeposit(decimal amount, string currency)
     {
-        _depositsTotal.Add(1, new KeyValuePair<string, object>("currency", currency));
+        _depositsTotal.Add(1, new KeyValuePair<string, object?>("currency", currency));
         _transactionAmounts.Record((double)amount,
-            new KeyValuePair<string, object>("type", "deposit"),
-            new KeyValuePair<string, object>("currency", currency));
+            new KeyValuePair<string, object?>("type", "deposit"),
+            new KeyValuePair<string, object?>("currency", currency));
     }
 
     /// <summary>Records a withdrawal transaction.</summary>
     public void RecordWithdrawal(decimal amount, string currency)
     {
-        _withdrawalsTotal.Add(1, new KeyValuePair<string, object>("currency", currency));
+        _withdrawalsTotal.Add(1, new KeyValuePair<string, object?>("currency", currency));
         _transactionAmounts.Record((double)amount,
-            new KeyValuePair<string, object>("type", "withdrawal"),
-            new KeyValuePair<string, object>("currency", currency));
+            new KeyValuePair<string, object?>("type", "withdrawal"),
+            new KeyValuePair<string, object?>("currency", currency));
     }
 
     /// <summary>Records a transfer transaction.</summary>
     public void RecordTransfer(decimal amount, string currency)
     {
-        _transfersTotal.Add(1, new KeyValuePair<string, object>("currency", currency));
+        _transfersTotal.Add(1, new KeyValuePair<string, object?>("currency", currency));
         _transactionAmounts.Record((double)amount,
-            new KeyValuePair<string, object>("type", "transfer"),
-            new KeyValuePair<string, object>("currency", currency));
+            new KeyValuePair<string, object?>("type", "transfer"),
+            new KeyValuePair<string, object?>("currency", currency));
     }
 
     /// <summary>Records an account opened event.</summary>

@@ -40,7 +40,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Startup>
             (context, config) =>
             {
                 config.AddInMemoryCollection(
-                    new Dictionary<string, string>
+                    new Dictionary<string, string?>
                     {
                         ["FeatureManagement:PostgreSql"] = "true",
                         ["PersistenceModule:DefaultConnection"] = this._postgresContainer.GetConnectionString(),

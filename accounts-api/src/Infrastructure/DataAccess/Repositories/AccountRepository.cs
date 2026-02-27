@@ -62,16 +62,16 @@ public sealed class AccountRepository : IAccountRepository
     /// <inheritdoc />
     public async Task<IAccount> GetAccount(AccountId accountId)
     {
-        Account account = await this._context
+        Account? account = await this._context
             .Accounts
             .Where(e => e.AccountId == accountId)
             .Select(e => e)
             .SingleOrDefaultAsync()
             .ConfigureAwait(false);
 
-        if (account is Account findAccount)
+        if (account is not null)
         {
-            await this.LoadTransactions(findAccount)
+            await this.LoadTransactions(account)
                 .ConfigureAwait(false);
 
             return account;
@@ -94,16 +94,16 @@ public sealed class AccountRepository : IAccountRepository
 
     public async Task<IAccount> Find(AccountId accountId, string externalUserId)
     {
-        Account account = await this._context
+        Account? account = await this._context
             .Accounts
             .Where(e => e.ExternalUserId == externalUserId && e.AccountId == accountId)
             .Select(e => e)
             .SingleOrDefaultAsync()
             .ConfigureAwait(false);
 
-        if (account is Account findAccount)
+        if (account is not null)
         {
-            await this.LoadTransactions(findAccount)
+            await this.LoadTransactions(account)
                 .ConfigureAwait(false);
 
             return account;

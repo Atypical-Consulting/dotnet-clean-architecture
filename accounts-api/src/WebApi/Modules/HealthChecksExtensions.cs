@@ -71,7 +71,7 @@ public static class HealthChecksExtensions
                 pair => (object)new Dictionary<string, object>
                 {
                     ["status"] = pair.Value.Status.ToString(),
-                    ["description"] = pair.Value.Description,
+                    ["description"] = pair.Value.Description ?? string.Empty,
                     ["data"] = pair.Value.Data.ToDictionary(p => p.Key, p => p.Value)
                 })
         };

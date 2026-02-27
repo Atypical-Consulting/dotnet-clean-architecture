@@ -48,12 +48,12 @@ public static class Program
         {
             options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
             {
-                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value ?? string.Empty);
                 diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
 
                 if (httpContext.User.Identity?.IsAuthenticated == true)
                 {
-                    diagnosticContext.Set("UserId", httpContext.User.Identity.Name);
+                    diagnosticContext.Set("UserId", httpContext.User.Identity.Name ?? string.Empty);
                 }
             };
         });

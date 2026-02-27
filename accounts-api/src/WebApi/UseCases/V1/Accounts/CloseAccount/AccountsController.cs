@@ -31,7 +31,7 @@ public sealed class AccountsController : ControllerBase, IOutputPort
     private readonly ICloseAccountUseCase _useCase;
     private readonly BusinessMetrics _businessMetrics;
 
-    private IActionResult _viewModel;
+    private IActionResult? _viewModel;
 
     public AccountsController(ICloseAccountUseCase useCase, Notification notification, BusinessMetrics businessMetrics)
     {
