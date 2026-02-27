@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 
 /// <summary>
@@ -28,6 +29,8 @@ public sealed class ContextFactory : IDesignTimeDbContextFactory<MangaContext>
         Console.WriteLine(connectionString);
         builder.UseSqlServer(connectionString);
         builder.EnableSensitiveDataLogging();
+        builder.ConfigureWarnings(warnings =>
+            warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
         return new MangaContext(builder.Options);
     }
 

@@ -3,6 +3,7 @@
 using System;
 using Infrastructure.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 public sealed class StandardFixture : IDisposable
 {
@@ -13,6 +14,8 @@ public sealed class StandardFixture : IDisposable
 
         DbContextOptions<MangaContext> options = new DbContextOptionsBuilder<MangaContext>()
             .UseSqlServer(connectionString)
+            .ConfigureWarnings(warnings =>
+                warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
             .Options;
 
         this.Context = new MangaContext(options);
