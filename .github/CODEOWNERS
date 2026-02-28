@@ -1,0 +1,27 @@
+# CODEOWNERS — Atypical-Consulting/dotnet-clean-architecture
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @Atypical-Consulting
+
+# Solution and build configuration
+/*.sln @Atypical-Consulting
+/Directory.Build.props @Atypical-Consulting
+/Directory.Packages.props @Atypical-Consulting
+/nuget.config @Atypical-Consulting
+
+# Application source code
+/src/ @Atypical-Consulting
+
+# Tests
+/tests/ @Atypical-Consulting
+
+# Infrastructure and deployment
+/k8s/ @Atypical-Consulting
+
+# CI/CD workflows
+/.github/workflows/ @Atypical-Consulting
+
+# Documentation
+/docs/ @Atypical-Consulting
+*.md @Atypical-Consulting
