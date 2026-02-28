@@ -7,8 +7,24 @@ A production-ready reference implementation of **Clean Architecture** on the .NE
 
 ---
 
+## Key Features
+
+- **Clean Architecture** — Domain and Application layers with zero dependency on frameworks or infrastructure, enforcing the dependency rule at compile time
+- **CQRS with Use Cases** — Command/Query separation through explicit use case classes with input/output ports and presenters
+- **Domain-Driven Design** — Rich domain model with entities, value objects, aggregate roots, repository interfaces, and domain events
+- **.NET Aspire Orchestration** — Declarative service composition with automatic PostgreSQL provisioning, service discovery, health checks, and a built-in dashboard
+- **Blazor Web App + Tailwind CSS** — Server and client rendering in a single project with utility-first CSS integrated into the .NET build pipeline
+- **OAuth 2.0 / OpenID Connect** — Standards-based authentication via ASP.NET Core Identity and OpenIddict, with no external provider dependency
+- **OpenTelemetry Observability** — Vendor-neutral distributed traces, metrics, and structured logging (Serilog with OTLP sink) across all services
+- **Kubernetes + Helm Deployment** — Production-ready Helm chart with staging and production value files, OCI container images published via .NET SDK
+- **Comprehensive Testing** — Four test layers (unit, integration, component, end-to-end) with Testcontainers for real PostgreSQL in CI
+- **Feature Flags & API Versioning** — Runtime feature toggles via `Microsoft.FeatureManagement` and versioned API endpoints via `Asp.Versioning`
+
+---
+
 ## Table of Contents
 
+- [Key Features](#key-features)
 - [Project Overview](#project-overview)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
