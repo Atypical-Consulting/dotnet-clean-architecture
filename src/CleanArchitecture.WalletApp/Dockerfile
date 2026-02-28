@@ -5,6 +5,8 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 RUN apk add --no-cache nodejs npm
 WORKDIR /src
+COPY ["Directory.Build.props", "./"]
+COPY ["Directory.Packages.props", "./"]
 COPY ["src/CleanArchitecture.WalletApp/CleanArchitecture.WalletApp.csproj", "src/CleanArchitecture.WalletApp/"]
 COPY ["src/CleanArchitecture.ServiceDefaults/CleanArchitecture.ServiceDefaults.csproj", "src/CleanArchitecture.ServiceDefaults/"]
 RUN dotnet restore "src/CleanArchitecture.WalletApp/CleanArchitecture.WalletApp.csproj"
