@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <!-- Third party -->
+    <PackageReference Include="TheAppManager" />
 <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Scalar.AspNetCore" />
     <!-- Decorator injection comparison https://greatrexpectations.com/2018/10/25/decorators-in-net-core-with-dependency-injection -->
