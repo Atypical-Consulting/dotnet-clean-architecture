@@ -1,41 +1,11 @@
-using CleanArchitecture.WalletApp.Components;
-using CleanArchitecture.WalletApp.Services;
+using CleanArchitecture.WalletApp.Modules;
+using TheAppManager.Startup;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add Aspire service defaults (OpenTelemetry, health checks, service discovery, resilience)
-builder.AddServiceDefaults();
-
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
-builder.Services.AddHttpClient<AccountApiClient>(client =>
+AppManager.Start(args, modules =>
 {
-    // When running under Aspire, "https+http://webapi" resolves via service discovery.
-    // Falls back to configuration or localhost for standalone usage.
-    var apiBaseUrl = builder.Configuration["services:webapi:https:0"]
-                    ?? builder.Configuration["services:webapi:http:0"]
-                    ?? builder.Configuration["ApiBaseUrl"]
-                    ?? "http://localhost:5000";
-    client.BaseAddress = new Uri(apiBaseUrl);
+    modules
+        .Add<AspireDefaultsModule>()
+        .Add<BlazorServicesModule>()
+        .Add<MiddlewareModule>()
+        .Add<BlazorEndpointsModule>();
 });
-
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
-}
-
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-app.UseHttpsRedirection();
-app.UseAntiforgery();
-
-app.MapDefaultEndpoints();
-
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-app.Run();

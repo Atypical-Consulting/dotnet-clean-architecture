@@ -62,6 +62,9 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.12.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.12.0" />
 
+    <!-- TheAppManager -->
+    <PackageVersion Include="TheAppManager" Version="2.0.0" />
+
     <!-- Serilog -->
     <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
